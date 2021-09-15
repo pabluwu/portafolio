@@ -21,12 +21,12 @@
         </div>
         <ul class="nav-links">
             <li>
-                <a href="">
+                <a href="{% url 'proyecto' %}">
                     <i class='bx bx-home-smile' ></i>
                     <span class="link_name">Inicio.</span>
                 </a>
                 <ul class="sub-menu blank">
-                    <li><a href="" class="link_name">Inicio.</a></li>
+                    <li><a href="{% url 'proyecto' %}" class="link_name">Inicio.</a></li>
                 </ul>
             </li>
             <li>
@@ -46,9 +46,31 @@
                 </div>
                 <ul class="sub-menu">
                     <li><a href="" class="link_name">Flujo de tareas.</a></li>
-                    <li><a href="">Agregar Flujo</a></li>
-                    <li><a href="">Listar Flujos</a></li>
+                    <li><a href="{% url 'agregar_flujo_tarea' %}">Agregar Flujo</a></li>
+                    <li><a href="{% url 'listar_flujo_tareas' %}">Listar Flujos</a></li>
                     <li><a href="">Modificar Flujos</a></li>
+                </ul>
+            </li>
+            <li>
+                <div class="iocn-link">
+                    <!-- <a href="">
+                        <i class='bx bx-grid' ></i>
+                        <span class="link_name">Flujo de tarea.</span>
+                    </a> -->
+                    <div class="link_name_parent">
+                        <i class='bx bx-task' ></i>
+                        <span class="link_name">Tareas.</span>
+                    </div>
+                        
+                        
+                    
+                    <i class='bx bxs-down-arrow arrow' ></i>
+                </div>
+                <ul class="sub-menu">
+                    <li><a href="" class="link_name">Tareas.</a></li>
+                    <li><a href="{% url 'agregar_tarea' %}">Agregar Tarea</a></li>
+                    <li><a href="{% url 'listar_tareas' %}">Listar Tareas</a></li>
+                    <li><a href="">Modificar Tarea</a></li>
                 </ul>
             </li>
         </ul>
@@ -57,7 +79,7 @@
     <section class="home-section">
         <div class="home-content">
             <i class='bx bx-menu' ></i>
-            <span class="text">Drop Down Sidebar</span>
+            <span class="text">Sistema de control de tareas</span>
         </div>
         {% block content %}
         {% endblock %}

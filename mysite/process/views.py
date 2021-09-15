@@ -1,14 +1,19 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login
 from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
 from . import forms
+from . import models
 
+@login_required()
 def index(request):
-    return render(request, 'registration/login.html')
+    return render(request, 'process/project.html')
+
 
 def proyecto(request):
     return render(request, 'process/project.html')
 
+@login_required()
 def agregar_flujo_tarea(request):
     data = {
         'form': forms.FlujoTareaForm()
@@ -21,9 +26,9 @@ def agregar_flujo_tarea(request):
         else:
             data["form"] = formulario
     
-    return render(request, 'process/agregar_flujo_tarea.html', data)
+    return render(request, 'process/flujo_tarea/agregar_flujo_tarea.html', data)
 
-
+@login_required()
 def agregar_tarea(request):
     data= {
         'form': forms.TareaForm()
@@ -35,8 +40,55 @@ def agregar_tarea(request):
             data["mensaje"] = "Guardado correctamente."
         else:
             data["form"] = formulario
-    return render(request, 'process/agregar_tarea.html', data)
+    return render(request, 'process/tarea/agregar_tarea.html', data)
 
+@login_required()
+def listar_tareas(request):
+    tareas = models.Tarea.objects.all()
+    data = {
+        'tareas':tareas
+    }
+    return render(request, 'process/tarea/listar_tarea.html', data)
+
+@login_required()
+def listar_flujo_tareas(request):
+    flujo_tareas = models.FlujoTarea.objects.all()
+    data = {
+        'flujo_tareas':flujo_tareas
+    }
+    return render(request, 'process/flujo_tarea/listar_flujo_tareas.html', data)
+
+@login_required()
+def modificar_tarea(request, id):
+    tarea = get_object_or_404(models.Tarea, id=id)
+
+    data={
+        'form': forms.TareaForm(instance=tarea)
+    }
+
+    if request.method == 'POST':
+        formulario = forms.TareaForm(data=request.POST, instance=tarea, files=request.FILES)
+        if formulario.is_valid():
+            formulario.save()
+            return redirect(to="listar_tareas")
+        data["form"] = formulario
+    return render(request,'process/tarea/modificar_tarea.html', data)
+
+@login_required()
+def modificar_flujo_tarea(request, id):
+    flujo_tarea = get_object_or_404(models.FlujoTarea, id=id)
+
+    data={
+        'form': forms.FlujoTareaForm(instance=flujo_tarea)
+    }
+
+    if request.method == 'POST':
+        formulario = forms.FlujoTareaForm(data=request.POST, instance=flujo_tarea, files=request.FILES)
+        if formulario.is_valid():
+            formulario.save()
+            return redirect(to="listar_flujo_tareas")
+        data["form"] = formulario
+    return render(request,'process/flujo_tarea/modificar_flujo_tarea.html', data)
 
 
 # Create your views here.
