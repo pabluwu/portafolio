@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from . import forms
@@ -15,18 +16,22 @@ def proyecto(request):
 
 @login_required()
 def agregar_flujo_tarea(request):
-    data = {
-        'form': forms.FlujoTareaForm()
-    }
-    if request.method == 'POST':
-        formulario = forms.FlujoTareaForm(data=request.POST, files=request.FILES)
-        if formulario.is_valid():
-            formulario.save()
-            data["mensaje"] = "Guardado correctamente."
-        else:
-            data["form"] = formulario
-    
-    return render(request, 'process/flujo_tarea/agregar_flujo_tarea.html', data)
+    if request.user.is_superuser:
+        data = {
+            'form': forms.FlujoTareaForm()
+        }
+        if request.method == 'POST':
+            formulario = forms.FlujoTareaForm(data=request.POST, files=request.FILES)
+            if formulario.is_valid():
+                formulario.save()
+                data["mensaje"] = "Guardado correctamente."
+            else:
+                data["form"] = formulario
+        
+        return render(request, 'process/flujo_tarea/agregar_flujo_tarea.html', data)
+    else:
+        return render(request,'process/error_permiso.html')
+
 
 @login_required()
 def agregar_tarea(request):
@@ -52,11 +57,15 @@ def listar_tareas(request):
 
 @login_required()
 def listar_flujo_tareas(request):
-    flujo_tareas = models.FlujoTarea.objects.all()
-    data = {
-        'flujo_tareas':flujo_tareas
-    }
-    return render(request, 'process/flujo_tarea/listar_flujo_tareas.html', data)
+    if request.user.is_superuser:
+        flujo_tareas = models.FlujoTarea.objects.all()
+        data = {
+            'flujo_tareas':flujo_tareas
+        }
+        return render(request, 'process/flujo_tarea/listar_flujo_tareas.html', data)
+    else:
+        return render(request,'process/error_permiso.html')
+
 
 @login_required()
 def modificar_tarea(request, id):
@@ -76,19 +85,37 @@ def modificar_tarea(request, id):
 
 @login_required()
 def modificar_flujo_tarea(request, id):
-    flujo_tarea = get_object_or_404(models.FlujoTarea, id=id)
+    if request.user.is_superuser:
+        flujo_tarea = get_object_or_404(models.FlujoTarea, id=id)
 
-    data={
-        'form': forms.FlujoTareaForm(instance=flujo_tarea)
-    }
+        data={
+            'form': forms.FlujoTareaForm(instance=flujo_tarea)
+        }
 
-    if request.method == 'POST':
-        formulario = forms.FlujoTareaForm(data=request.POST, instance=flujo_tarea, files=request.FILES)
-        if formulario.is_valid():
-            formulario.save()
-            return redirect(to="listar_flujo_tareas")
-        data["form"] = formulario
-    return render(request,'process/flujo_tarea/modificar_flujo_tarea.html', data)
+        if request.method == 'POST':
+            formulario = forms.FlujoTareaForm(data=request.POST, instance=flujo_tarea, files=request.FILES)
+            if formulario.is_valid():
+                formulario.save()
+                return redirect(to="listar_flujo_tareas")
+            data["form"] = formulario
+        return render(request,'process/flujo_tarea/modificar_flujo_tarea.html', data)
+    else:
+        return render(request,'process/error_permiso.html')
+
+@login_required()
+def registrar_usuario(request):
+    if request.user.is_superuser:
+        data={
+            'form': forms.CustomUserCreationForm()
+        }
+
+        if request.method=='POST':
+            formulario = forms.CustomUserCreationForm(data=request.POST, files=request.FILES)
+            if formulario.is_valid():
+                formulario.save()
+        return render(request,'registration/register_user.html', data)
+    else:
+        return render(request,'process/error_permiso.html')
 
 
 # Create your views here.

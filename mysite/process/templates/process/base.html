@@ -31,6 +31,22 @@
             </li>
             <li>
                 <div class="iocn-link">
+                    <div class="link_name_parent">
+                        <i class='bx bx-task' ></i>
+                        <span class="link_name">Tareas.</span>
+                    </div>
+                    <i class='bx bxs-down-arrow arrow' ></i>
+                </div>
+                <ul class="sub-menu">
+                    <li><a href="" class="link_name">Tareas.</a></li>
+                    <li><a href="{% url 'agregar_tarea' %}">Agregar Tarea</a></li>
+                    <li><a href="{% url 'listar_tareas' %}">Listar Tareas</a></li>
+                    <li><a href="">Modificar Tarea</a></li>
+                </ul>
+            </li>
+            {% if request.user.is_superuser %}
+            <li>
+                <div class="iocn-link">
                     <!-- <a href="">
                         <i class='bx bx-grid' ></i>
                         <span class="link_name">Flujo de tarea.</span>
@@ -52,27 +68,15 @@
                 </ul>
             </li>
             <li>
-                <div class="iocn-link">
-                    <!-- <a href="">
-                        <i class='bx bx-grid' ></i>
-                        <span class="link_name">Flujo de tarea.</span>
-                    </a> -->
-                    <div class="link_name_parent">
-                        <i class='bx bx-task' ></i>
-                        <span class="link_name">Tareas.</span>
-                    </div>
-                        
-                        
-                    
-                    <i class='bx bxs-down-arrow arrow' ></i>
-                </div>
-                <ul class="sub-menu">
-                    <li><a href="" class="link_name">Tareas.</a></li>
-                    <li><a href="{% url 'agregar_tarea' %}">Agregar Tarea</a></li>
-                    <li><a href="{% url 'listar_tareas' %}">Listar Tareas</a></li>
-                    <li><a href="">Modificar Tarea</a></li>
+                <a href="{% url 'registrar_usuario' %}">
+                    <i class='bx bxs-user-plus' ></i>
+                    <span class="link_name">Registrar usuario.</span>
+                </a>
+                <ul class="sub-menu blank">
+                    <li><a href="{% url 'proyecto' %}" class="link_name">Registrar usuario.</a></li>
                 </ul>
             </li>
+            {% endif %}
         </ul>
     
     </div>
