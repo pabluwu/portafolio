@@ -171,6 +171,7 @@ def modificar_usuario_admin(request, id):
                 usuario.email=formulario['email'].value()
                 usuario.save()
                 data["mensaje"] = "Modificado correctamente."
+                data["form"] = formulario
 
         return render(request,'registration/modificar_usuario.html', data)
     else:
