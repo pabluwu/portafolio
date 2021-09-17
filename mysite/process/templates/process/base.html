@@ -41,7 +41,6 @@
                     <li><a href="" class="link_name">Tareas.</a></li>
                     <li><a href="{% url 'agregar_tarea' %}">Agregar Tarea</a></li>
                     <li><a href="{% url 'listar_tareas' %}">Listar Tareas</a></li>
-                    <li><a href="">Modificar Tarea</a></li>
                 </ul>
             </li>
             {% if request.user.is_superuser %}
@@ -64,18 +63,26 @@
                     <li><a href="" class="link_name">Flujo de tareas.</a></li>
                     <li><a href="{% url 'agregar_flujo_tarea' %}">Agregar Flujo</a></li>
                     <li><a href="{% url 'listar_flujo_tareas' %}">Listar Flujos</a></li>
-                    <li><a href="">Modificar Flujos</a></li>
                 </ul>
             </li>
             <li>
-                <a href="{% url 'registrar_usuario' %}">
-                    <i class='bx bxs-user-plus' ></i>
-                    <span class="link_name">Registrar usuario.</span>
-                </a>
-                <ul class="sub-menu blank">
-                    <li><a href="{% url 'proyecto' %}" class="link_name">Registrar usuario.</a></li>
+                <div class="iocn-link">
+                    <div class="link_name_parent">
+                        <i class='bx bxs-user-plus' ></i>
+                        <span class="link_name">Gestión usuario.</span>
+                    </div>
+                        
+                        
+                    
+                    <i class='bx bxs-down-arrow arrow' ></i>
+                </div>
+                <ul class="sub-menu">
+                    <li><a href="" class="link_name">Gestión de usuarios.</a></li>
+                    <li><a href="{% url 'registrar_usuario' %}">Agregar Usuario</a></li>
+                    <li><a href="{% url 'listar_usuarios' %}">Listar Usuario</a></li>
                 </ul>
             </li>
+
             {% endif %}
         </ul>
     

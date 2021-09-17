@@ -9,6 +9,7 @@ body {
 }
 
 .sidebar{
+    max-width: 268px;
     position: fixed;
     top: 0;
     left: 0;
@@ -117,13 +118,13 @@ body {
 }
 
 .sidebar .nav-links li a .link_name{
-    font-size: 18px;
+    font-size: 15px;
     font-weight: 400;
     color: #fff
 }
 
 .link_name_parent .link_name{
-    font-size: 18px;
+    font-size: 15px;
     font-weight: 400;
     color: #fff
 }
