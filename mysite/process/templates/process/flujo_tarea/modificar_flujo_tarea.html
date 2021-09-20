@@ -19,7 +19,9 @@
                         <div class="d-flex justify-content-center">
                             <a href="{% url 'listar_flujo_tareas'%}" class="btn btn-secondary">Cancelar</a>
                             &nbsp;
+                            {% if perms.process.change_flujotarea %}
                             <input type="submit" value="Editar" class="btn btn-primary">
+                            {% endif %}
                         </div>
 
                     </form>

@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, get_user_model
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group, Permission
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
+from django.contrib.contenttypes.models import ContentType
 from . import forms
 from . import models
 
@@ -57,7 +58,7 @@ def modificar_tarea(request, id):
 
 @login_required()
 def agregar_flujo_tarea(request):
-    if request.user.is_superuser:
+    if request.user.has_perm('process.add_flujotarea'):
         data = {
             'form': forms.FlujoTareaForm()
         }
@@ -75,7 +76,7 @@ def agregar_flujo_tarea(request):
 
 @login_required()
 def listar_flujo_tareas(request):
-    if request.user.is_superuser:
+    if request.user.has_perm('process.change_flujotarea'):
         flujo_tareas = models.FlujoTarea.objects.all()
         data = {
             'flujo_tareas':flujo_tareas
@@ -118,13 +119,15 @@ def registrar_usuario(request):
             password1 = formulario['password1'].value()
             password2 = formulario['password2'].value()
             if len(username) >= 5:
-                print(username)
                 if len(password1) > 7:
                     if password1 == password2:
                         if formulario.is_valid():
                             formulario.save()
                             data["mensaje"] = "Guardado correctamente."
                             print("guardado")
+                        else:
+                            data["mensaje"] = "Contraseña insegura."
+                            data["form"] = formulario
                     else:
                         data["mensaje"] = "Contraseñas no coinciden"
                         data["form"] = formulario
@@ -158,14 +161,18 @@ def modificar_usuario_admin(request, id):
         data_form={'username':usuario.get_username(),
         'nombre':usuario.get_short_name(),
         'apellido':usuario.last_name,
-        'email':usuario.email}
-        print(usuario)
+        'email':usuario.email,
+        'grupos':usuario.groups.all()}
         data={
             'form': forms.UsuarioFormulario(data_form)
         }
         if request.method=='POST':
             formulario = forms.UsuarioFormulario(data=request.POST, files=request.FILES)
             if formulario.is_valid():
+                usuario.groups.clear()
+                for i in formulario['grupos'].value():
+                    grupos, created = Group.objects.get_or_create(id=i)
+                    usuario.groups.add(grupos)
                 usuario.first_name=formulario['nombre'].value()
                 usuario.last_name=formulario['apellido'].value()
                 usuario.email=formulario['email'].value()
@@ -185,9 +192,22 @@ def agregar_grupo(request):
         data={
             'form': forms.GroupForm()
         }
+        if request.method=='POST':
+            formulario = forms.GroupForm(data=request.POST)
+            nombre = formulario['nombre'].value()
+            permisos = formulario['permisos'].value()
+            permiso = Permission.objects.all()
+            grupo_nuevo, created = Group.objects.get_or_create(name=nombre)
+            for i in permisos:
+                permiso = Permission.objects.get(codename=i)
+                grupo_nuevo.permissions.add(permiso)
+                print(i)
+            grupo_nuevo.save()
         return render(request,'process/grupos_roles/agregar_grupo.html', data)
     else:
         return render(request,'process/error_permiso.html')
+
+
 
 
 # Create your views here.

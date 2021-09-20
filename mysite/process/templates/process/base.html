@@ -39,11 +39,13 @@
                 </div>
                 <ul class="sub-menu">
                     <li><a href="" class="link_name">Tareas.</a></li>
+                    {% if perms.process.add_tarea %}
                     <li><a href="{% url 'agregar_tarea' %}">Agregar Tarea</a></li>
+                    {% endif %}
                     <li><a href="{% url 'listar_tareas' %}">Listar Tareas</a></li>
                 </ul>
             </li>
-            {% if request.user.is_superuser %}
+            {% if perms.process.add_flujotarea or perms.process.change_flujotarea %}
             <li>
                 <div class="iocn-link">
                     <!-- <a href="">
@@ -61,10 +63,16 @@
                 </div>
                 <ul class="sub-menu">
                     <li><a href="" class="link_name">Flujo de tareas.</a></li>
+                    {% if perms.process.add_flujotarea %}
                     <li><a href="{% url 'agregar_flujo_tarea' %}">Agregar Flujo</a></li>
+                    {% endif%}
+                    {% if perms.process.change_flujotarea%}
                     <li><a href="{% url 'listar_flujo_tareas' %}">Listar Flujos</a></li>
+                    {% endif %}
                 </ul>
             </li>
+            {% endif %}
+            {% if request.user.is_superuser %}
             <li>
                 <div class="iocn-link">
                     <div class="link_name_parent">
@@ -80,6 +88,8 @@
                     <li><a href="" class="link_name">Gestión de usuarios.</a></li>
                     <li><a href="{% url 'registrar_usuario' %}">Agregar Usuario</a></li>
                     <li><a href="{% url 'listar_usuarios' %}">Listar Usuario</a></li>
+                    <li><a href="{% url 'agregar_grupo' %}">Agregar rol</a></li>
+
                 </ul>
             </li>
 

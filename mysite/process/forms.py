@@ -6,12 +6,12 @@ from django.forms import ValidationError
 
 from . import models
 
-class UserCreationForm(forms.ModelForm):
-    password1 = forms.CharField(label='Contraseña', widget=forms.PasswordInput)
+class UserCreationForm(UserCreationForm):
+    pass
+    """ password1 = forms.CharField(label='Contraseña', widget=forms.PasswordInput)
     password2 = forms.CharField(
         label='Confirmar contraseña', widget=forms.PasswordInput)
-    
-
+     """
     class Meta:
         model = User
         fields=['username','first_name','last_name','email']
@@ -35,18 +35,38 @@ class UserGroupForm(forms.ModelForm):
     class Meta:
         model = Group
         fields = '__all__'
-        widgets = {
-            'permissions': FilteredSelectMultiple("Permission", False, attrs={'rows':'2'}),
-        }
 
 class GroupForm(forms.Form):
+
+
+
+    FAVORITE_COLORS_CHOICES = [
+    ('add_tarea', 'Agregar Tarea'),
+    ('change_tarea', 'Modificar Tarea'),
+    ('add_flujotarea', 'Agregar flujo de tarea'),
+    ('change_flujotarea', 'Modificar flujo de tarea'),
+]
     nombre = forms.CharField(max_length=50)
+    permisos = forms.MultipleChoiceField(
+        required=False,
+        widget=forms.CheckboxSelectMultiple,
+        choices=FAVORITE_COLORS_CHOICES,
+    )
 
 class UsuarioFormulario(forms.Form):
+    
+    FAVORITE_COLORS_CHOICES = [
+    ('add_tarea', 'Agregar Tarea'),
+    ('change_tarea', 'Modificar Tarea'),
+    ('add_flujotarea', 'Agregar flujo de tarea'),
+    ('change_flujotarea', 'Modificar flujo de tarea'),
+]
+
     username = forms.CharField(max_length=50)
     nombre = forms.CharField(max_length=50)
     apellido = forms.CharField(max_length=50)
     email = forms.CharField(max_length=50)
+    grupos = forms.ModelMultipleChoiceField(queryset=Group.objects.all(),widget=forms.CheckboxSelectMultiple)
 
 
     
