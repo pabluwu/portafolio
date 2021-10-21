@@ -37,14 +37,30 @@ def agregar_tarea(request):
 
 @login_required()
 def listar_tareas(request):
+    rechazo = models.MotivoRechazo()
+    respuesta = models.RespuestaRechazo()
+    rechazos = []
     if request.user.is_superuser:
         tareas = models.Tarea.objects.filter(realizado=False)
+        for t in tareas:
+            try:
+                rechazo = models.MotivoRechazo.objects.get(tarea=t, respondido=False)
+                try:
+                    respuesta = models.RespuestaRechazo.objects.get(motivoRechazo=rechazo)
+                except:
+                    if rechazo:
+                        print(t)
+                        rechazos.append(rechazo)
+                        print(rechazos[0].tarea)
+            except rechazo.DoesNotExist:     
+                print("No existen tareas")  
     else:
         user = request.user
         tareas = models.Tarea.objects.filter(usuario = user, realizado = False)                                        
 
     data = {
-        'tareas':tareas
+        'tareas':tareas ,
+        'rechazos':rechazos
     }
     return render(request, 'process/tarea/listar_tarea.html', data)
 
@@ -90,28 +106,85 @@ def tarea_completada(request, id):
 
 @login_required()
 def modificar_tarea(request, id):
+    rechazo = models.MotivoRechazo()
+    respuestaRechazo = models.RespuestaRechazo()
     tarea = get_object_or_404(models.Tarea, id=id)
+    data_form = forms.SolicitudRechazoForm()
+    try:
+        rechazo = models.MotivoRechazo.objects.get(tarea=tarea, respondido=False)
+        data_form={'descripcion':rechazo.descripcion,
+        'usuario':rechazo.usuario.get_short_name(),
+        'tarea':rechazo.tarea.nombre}
+    except rechazo.DoesNotExist: 
+        rechazo = None
+    try:
+        respuestaRechazo = models.RespuestaRechazo.objects.get(motivoRechazo=rechazo)
+    except respuestaRechazo.DoesNotExist:
+        respuestaRechazo = None
 
+    forms 
+
+    print(rechazo)
+    print(respuestaRechazo)
     data={
-        'form': forms.TareaForm(instance=tarea)
+        'form': forms.TareaForm(instance=tarea),
+        'formRechazo': forms.RechazoForm(),
+        'formSolicitudRechazo': forms.SolicitudRechazoForm(data_form),
+        'formRespuesta': forms.RespuestaSolicitudForm(),
+        'formRespuestaSolicitud': forms.RespuestaSolicitudRespondidaForm(instance=respuestaRechazo),
+        'rechazo': rechazo,
+        'respuestaRechazo': respuestaRechazo,
+        'tarea': tarea
     }
 
     if request.method == 'POST':
-        formulario = forms.TareaForm(data=request.POST, instance=tarea, files=request.FILES)
-        if formulario.is_valid():
-            if request.POST.get('mybtn'):
-                tarea.usuario=None
-                tarea.save()
+        if request.POST.get("form_type") == 'modificarform':
+            formulario = forms.TareaForm(data=request.POST, instance=tarea, files=request.FILES)
+            if formulario.is_valid():
+                if request.POST.get('terminar'):
+                    tarea.realizado = True
+                    tarea.fechaTermino = datetime.now()
+                    tarea.save()
+                    return HttpResponseRedirect('/')
+                else:    
+                    formulario.save()
+                    return redirect(to="listar_tareas")
+            data["form"] = formulario
+        if request.POST.get("form_type") == 'motivoform':
+            if  rechazo == None and tarea.usuario != None:
+                formularioRechazo = forms.RechazoForm(data=request.POST, files=request.FILES)
+                motivoRechazo = models.MotivoRechazo()
+                if formularioRechazo.is_valid():
+                    motivoRechazo.descripcion=formularioRechazo['descripcion'].value()
+                    motivoRechazo.usuario=request.user
+                    motivoRechazo.tarea=tarea
+                    motivoRechazo.save()
+                    tarea.usuario=None
+                    tarea.save()
+                    return redirect(to="listar_tareas")
+            # elif rechazo != None:
+                
+                
+        if request.POST.get("form_type") == 'solicitudform':
+            formRespustaRechazo = forms.RespuestaSolicitudForm(data=request.POST, files=request.FILES)
+            respuestaRechazo = models.RespuestaRechazo()
+            if formRespustaRechazo.is_valid():
+                respuestaRechazo.respuesta=formRespustaRechazo['respuesta'].value()
+                if request.POST.get('rechazarSolicitud'):
+                    respuestaRechazo.aceptado=False
+                    tarea.usuario = rechazo.usuario
+                    tarea.save()
+                elif request.POST.get('aceptarSolicitud'):
+                    respuestaRechazo.aceptado=True
+                    tarea.usuario = None
+                    tarea.save()
+                respuestaRechazo.motivoRechazo = rechazo
+                respuestaRechazo.save()
+                rechazo.respondido = True
+                rechazo.save()
                 return redirect(to="listar_tareas")
-            if request.POST.get('terminar'):
-                tarea.realizado = True
-                tarea.fechaTermino = datetime.now()
-                tarea.save()
-                return HttpResponseRedirect('/')
-            else:    
-                formulario.save()
-                return redirect(to="listar_tareas")
-        data["form"] = formulario
+                
+
     return render(request,'process/tarea/modificar_tarea.html', data)
 
 ## Gestión flujo de tareas

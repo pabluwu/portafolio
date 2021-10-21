@@ -22,6 +22,25 @@ class FlujoTarea(models.Model):
     def __str__(self):
         return self.nombre
     
+class MotivoRechazo(models.Model):
+    descripcion = models.TextField(blank=False)
+    respondido = models.BooleanField(default=False)
+    fechaCreacion = models.DateField(auto_now_add=True, auto_now=False)
+    usuario = models.ForeignKey(User, null=True, on_delete=models.PROTECT)
+    tarea = models.ForeignKey(Tarea, on_delete=models.PROTECT)
+
+    def __str__(self):
+        return self.descripcion
+
+class RespuestaRechazo(models.Model):
+    respuesta = models.TextField(blank=False, null=True)
+    fechaRespuesta = models.DateField(auto_now_add=True, auto_now=False)
+    aceptado = models.BooleanField(default=False)
+    motivoRechazo = models.ForeignKey(MotivoRechazo, on_delete=models.PROTECT)
+
+    def __str__(self):
+        return self.respuesta
+
 """     tarea = models.ForeignKey(Tarea, null=True, on_delete=models.PROTECT)  """
     
 """ 
@@ -31,4 +50,5 @@ class FlujoTarea_Tarea(models.Model):
 
     def __str__(self):
         return self.FlujoTarea  """
+
 

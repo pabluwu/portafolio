@@ -16,11 +16,15 @@
 
                         {% csrf_token %}
                         {{ form | crispy }}
-                        <div class="d-flex justify-content-center">
-                            <input type="reset" value="Cancelar" class="btn btn-secondary">
-                            &nbsp;
-                            <input type="submit" value="Guardar" class="btn btn-primary">
+                        <div class="row justify-content-end">
+                            <div class="col-12 col-md-6 offset-md-3r">
+                                <input type="reset" value="Cancelar" class="btn btn-secondary">
+                                &nbsp;
+                                <input type="submit" value="Guardar" class="btn btn-primary">
+                                &nbsp;
+                            </div>
                         </div>
+                       
 
                     </form>
                     {{mensaje}}

@@ -8,6 +8,15 @@ body {
     background-color: #e4e9f7 !important;
 }
 
+
+.btn{
+    margin-bottom: 10px !important;
+}
+
+.file-modificar .btn{
+    width: 100%;
+}
+
 .sidebar{
     max-width: 268px;
     position: fixed;

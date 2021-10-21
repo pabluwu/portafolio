@@ -3,6 +3,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import Group, Permission, User
 from django.contrib.admin.widgets import FilteredSelectMultiple, AdminDateWidget
 from django.forms import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 from . import models
 
@@ -16,7 +17,52 @@ class UserCreationForm(UserCreationForm):
         model = User
         fields=['username','first_name','last_name','email']
 
-   
+class RechazoForm(forms.ModelForm):
+    class Meta:
+        model = models.MotivoRechazo
+        fields =['descripcion']
+
+# class SolicitudRechazoForm(forms.ModelForm):
+#     class Meta:
+#         model = models.MotivoRechazo
+#         fields = ['descripcion', 'usuario', 'tarea']
+#         widgets = {
+#             'descripcion' : forms.TextInput(attrs={'readonly':'readonly'}),
+#             'usuario': forms.TextInput(attrs={'readonly':'readonly'}),
+#             'tarea': forms.TextInput(attrs={'readonly':'readonly'}),
+#         }
+
+class RespuestaSolicitudForm(forms.ModelForm):
+    class Meta:
+        model = models.RespuestaRechazo
+        fields = ['respuesta']
+
+class RespuestaSolicitudRespondidaForm(forms.ModelForm):
+    class Meta:
+        model = models.RespuestaRechazo
+        fields = ('respuesta', 'aceptado', 'motivoRechazo')
+        labels = {
+            'motivoRechazo': _('Solicitud de rechazo'),
+        }
+        widgets = {
+            'respuesta' : forms.TextInput(attrs={'readonly':'readonly'}),
+            'aceptado': forms.CheckboxInput(attrs={'disabled':'disabled'}),
+            'motivoRechazo' : forms.TextInput(attrs={'readonly':'readonly'}),
+        }
+
+class SolicitudRechazoForm(forms.Form):
+
+    descripcion = forms.CharField(max_length=50)
+    usuario = forms.CharField(max_length=50)
+    tarea = forms.CharField(max_length=50)
+    descripcion.widget.attrs['readonly'] = True
+    usuario.widget.attrs['readonly'] = True
+    tarea.widget.attrs['readonly'] = True
+    widgets = {
+        'descripcion' : forms.TextInput(attrs={'readonly':'readonly'}),
+        'usuario': forms.TextInput(attrs={'readonly':'readonly'}),
+        'tarea': forms.TextInput(attrs={'readonly':'readonly'}),
+    }
 
 
 class FlujoTareaForm(forms.ModelForm):
