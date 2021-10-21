@@ -1,9 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, get_user_model
 from django.contrib.auth.models import User, Group, Permission
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
+from datetime import datetime
 from . import forms
 from . import models
 
@@ -18,25 +19,74 @@ def proyecto(request):
 ## Gestión de tareas
 @login_required()
 def agregar_tarea(request):
-    data= {
-        'form': forms.TareaForm()
-    }
-    if request.method=='POST':
-        formulario = forms.TareaForm(data=request.POST, files=request.FILES)
-        if formulario.is_valid():
-            formulario.save()
-            data["mensaje"] = "Guardado correctamente."
-        else:
-            data["form"] = formulario
-    return render(request, 'process/tarea/agregar_tarea.html', data)
+    if request.user.has_perm('process.add_tarea'):
+        data= {
+            'form': forms.TareaForm()
+        }
+        if request.method=='POST':
+            formulario = forms.TareaForm(data=request.POST, files=request.FILES)
+            if formulario.is_valid():
+                formulario.save()
+                data["mensaje"] = "Guardado correctamente."
+            else:
+                data["form"] = formulario
+        return render(request, 'process/tarea/agregar_tarea.html', data)
+    else:
+        return render(request,'process/error_permiso.html')
+
 
 @login_required()
 def listar_tareas(request):
-    tareas = models.Tarea.objects.all()
+    if request.user.is_superuser:
+        tareas = models.Tarea.objects.filter(realizado=False)
+    else:
+        user = request.user
+        tareas = models.Tarea.objects.filter(usuario = user, realizado = False)                                        
+
     data = {
         'tareas':tareas
     }
     return render(request, 'process/tarea/listar_tarea.html', data)
+
+@login_required()
+def listar_tareas_completadas(request):
+    if request.user.is_superuser:
+        tareas = models.Tarea.objects.filter(realizado = True)
+    else:
+        user = request.user
+        tareas = models.Tarea.objects.filter(usuario = user, realizado = True)                                        
+
+    data = {
+        'tareas':tareas
+    }
+    return render(request, 'process/tarea/listar_tarea_completada.html', data)
+
+@login_required()
+def tarea_completada(request, id):
+    tarea = get_object_or_404(models.Tarea, id=id)
+
+    data={
+        'form': forms.TareaCompletaForm(instance=tarea)
+    }
+
+    if request.method == 'POST':
+        formulario = forms.TareaForm(data=request.POST, instance=tarea, files=request.FILES)
+
+        if formulario.is_valid():
+            if request.POST.get('mybtn'):
+                tarea.usuario=None
+                tarea.save()
+                return redirect(to="listar_tareas")
+            if request.POST.get('terminar'):
+                tarea.realizado = True
+                tarea.fechaTermino = datetime.now()
+                tarea.save()
+                return HttpResponseRedirect('/')
+            else:    
+                formulario.save()
+                return redirect(to="listar_tareas")
+        data["form"] = formulario
+    return render(request,'process/tarea/ver_tarea.html', data)
 
 @login_required()
 def modificar_tarea(request, id):
@@ -49,8 +99,18 @@ def modificar_tarea(request, id):
     if request.method == 'POST':
         formulario = forms.TareaForm(data=request.POST, instance=tarea, files=request.FILES)
         if formulario.is_valid():
-            formulario.save()
-            return redirect(to="listar_tareas")
+            if request.POST.get('mybtn'):
+                tarea.usuario=None
+                tarea.save()
+                return redirect(to="listar_tareas")
+            if request.POST.get('terminar'):
+                tarea.realizado = True
+                tarea.fechaTermino = datetime.now()
+                tarea.save()
+                return HttpResponseRedirect('/')
+            else:    
+                formulario.save()
+                return redirect(to="listar_tareas")
         data["form"] = formulario
     return render(request,'process/tarea/modificar_tarea.html', data)
 
@@ -87,7 +147,7 @@ def listar_flujo_tareas(request):
 
 @login_required()
 def modificar_flujo_tarea(request, id):
-    if request.user.is_superuser:
+    if request.user.has_perm('process.change_flujotarea'):
         flujo_tarea = get_object_or_404(models.FlujoTarea, id=id)
 
         data={
@@ -185,7 +245,7 @@ def modificar_usuario_admin(request, id):
         return render(request,'process/error_permiso.html')
 
 
-##Gestión de grupos y roles POR HACER.
+##Gestión de grupos y roles.
 @login_required()
 def agregar_grupo(request):
     if request.user.is_superuser:
@@ -207,7 +267,3 @@ def agregar_grupo(request):
     else:
         return render(request,'process/error_permiso.html')
 
-
-
-
-# Create your views here.

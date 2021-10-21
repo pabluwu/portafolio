@@ -10,17 +10,16 @@
             <div class="card">
                 <div class="card-body">
                     
-                    <h2>Editar un usuario.</h2>
+                    <h2>Revisar una tarea Completada.</h2>
                     <hr>
                     <form action="" method="POST" enctype="multipart/form-data">
 
                         {% csrf_token %}
                         {{ form | crispy }}
                         <div class="d-flex justify-content-center">
-                            <a href="{% url 'listar_usuarios'%}" class="btn btn-secondary">Cancelar</a>
-                            &nbsp;
-                            
-                            <input type="submit" value="Editar" class="btn btn-primary">
+                            {% if perms.process.change_tarea %}
+                            <input type="submit" value="Atras" class="btn btn-primary">
+                            {% endif %}
                         </div>
 
                     </form>

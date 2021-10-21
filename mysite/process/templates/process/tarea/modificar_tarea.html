@@ -19,6 +19,10 @@
                         <div class="d-flex justify-content-center">
                             <a href="{% url 'listar_tareas'%}" class="btn btn-secondary">Cancelar</a>
                             &nbsp;
+                            <input type="submit" value="Rechazar Tarea" class="btn btn-primary" name="mybtn">
+                            &nbsp;
+                            <input type="submit" value="Terminar tarea" class="btn btn-primary" name="terminar">
+                            &nbsp;
                             {% if perms.process.change_tarea %}
                             <input type="submit" value="Editar" class="btn btn-primary">
                             {% endif %}
@@ -31,7 +35,5 @@
         </div>
     </div>
 </div>
-
-
 
 {% endblock %}

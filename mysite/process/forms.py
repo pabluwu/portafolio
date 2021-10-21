@@ -1,7 +1,7 @@
 from django import forms 
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import Group, Permission, User
-from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.contrib.admin.widgets import FilteredSelectMultiple, AdminDateWidget
 from django.forms import ValidationError
 
 from . import models
@@ -29,7 +29,21 @@ class TareaForm(forms.ModelForm):
     
     class Meta:
         model = models.Tarea
+        fields = ['nombre', 'descripcion', 'fechaLimite', 'usuario']
+
+class TareaCompletaForm(forms.ModelForm):
+    class Meta:
+        model = models.Tarea
         fields = '__all__'
+        widgets = {
+            'nombre': forms.TextInput(attrs={'readonly':'readonly'}),
+            'descripcion': forms.TextInput(attrs={'readonly':'readonly'}),
+            'realizado': forms.CheckboxInput(attrs={'disabled':'disabled'}),
+            'fechaCreacion': forms.DateInput(attrs={'readonly':'readonly'}),
+            'fechaLimite': forms.DateInput(attrs={'readonly':'readonly'}),
+            'fechaTermino': forms.DateInput(attrs={'readonly':'readonly'}),
+            'usuario': forms.TextInput(attrs={'readonly':'readonly'}),
+        }
 
 class UserGroupForm(forms.ModelForm):
     class Meta:
