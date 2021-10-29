@@ -1,0 +1,116 @@
+{% extends 'process/base.html'%}
+{% load crispy_forms_tags %}
+{% block content %}
+
+<div class="container">
+    <br>
+    <br>
+    <div class="row">
+        <div class="col-12 col-md-6 offset-md-3">
+            <div class="card">
+                <div class="card-body">
+
+                    <h2>Editar una tarea.</h2>
+                    <hr>
+                    <form action="" method="POST" enctype="multipart/form-data">
+
+                        {% csrf_token %}
+                        {{ form | crispy }}
+                        <div class="row justify-content-between">
+                            <div class="file-modificar col-12 col-md-6 offset-md-3">
+
+                                    <a href="{% url 'listar_tareas'%}" class="btn btn-secondary">Cancelar</a>
+                                    <input type="hidden" name="form_type" value="modificarform">
+                                    
+                                    <!-- <input type="submit" value="Rechazar Tarea" class="btn btn-primary" name="mybtn"> -->
+                                    {% if rechazo == None or tarea.usuario != None %}
+                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                        data-bs-target="#exampleModal">Rechazar Tarea</button>
+                                    
+                                    {% elif rechazo != None %}
+                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                        data-bs-target="#exampleModal">Motivo Rechazo</button>
+                                    
+                                    {% endif %}
+                                    <input type="submit" value="Terminar tarea" class="btn btn-primary" name="terminar">
+                                    
+                                    {% if perms.process.change_tarea %}
+                                    <input type="submit" value="Editar" class="btn btn-primary">
+                                    {% endif %}
+
+                                
+                            </div>
+                        </div>
+                       
+
+                    </form>
+                    {{mensaje}}
+                </div>
+            </div>
+            <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Solicitud rechazo tarea</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form action="" method="POST" class="action">
+                            <div class="modal-body">
+
+                                {% csrf_token %}
+                                <input type="hidden" name="form_type" value="motivoform">
+                                {% if rechazo == None or tarea.usuario != None %}
+                                {{formRechazo | crispy }}
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <input type="submit" value="Rechazar" class="btn btn-primary">
+                            </div>
+                            {% elif rechazo != None %}
+                            {{ formSolicitudRechazo | crispy }}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                            data-bs-target="#exampleModal2">Gestionar solicitud</button>
+                    </div>
+                    {% endif %}
+                    </form>
+                </div>
+            </div>
+            <div class="modal fade" id="exampleModal2" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Gestión solicitud tarea</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form action="" method="POST" class="action">
+                            <div class="modal-body">
+    
+                                {% csrf_token %}
+                                <input type="hidden" name="form_type" value="solicitudform">
+                                {% if respuestaRechazo == None %}
+                                    {{ formRespuesta | crispy }}
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                    <input type="submit" value="Aceptar solicitud" class="btn btn-primary" name="aceptarSolicitud">
+                                    <input type="submit" value="Rechazar solicitud" class="btn btn-primary" name="rechazarSolicitud">
+                                </div>
+                                {% elif respuestaRechazo != None %}
+                                    {{ formRespuestaSolicitud | crispy }}
+                                {% endif %}
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</div>
+</div>
+
+{% endblock %}

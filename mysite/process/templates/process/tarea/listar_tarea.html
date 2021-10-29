@@ -1,0 +1,68 @@
+{% extends 'process/base.html'%}
+{% block content %}
+<div class="container col-12 col-md-6 offset-md-3">
+    <div class="card">
+        <div class="card-body">
+            <h2>Listado de tareas.</h2>
+            <hr>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-responsive-sm">
+                    <tr>
+                        <th>Nombre </th>
+                        <th>Realizado</th>
+                        {% if request.user.is_superuser %}
+                            <th>Asignada</th>
+                            <th>Solicitud Rechazo</th>
+                        {% endif %}
+                        <th>Semáforo</th>
+                        <th></th>
+                    </tr>
+                    {% for p in tareas %}
+                    <tr>
+                        <td>{{ p.nombre | title }}</td>
+                        <td>
+                            {% if p.realizado %}
+                            Si
+                            {% else %}
+                            No
+                            {% endif %}
+                
+                        </td>
+                        {% if request.user.is_superuser %}
+                            <td>
+                                {% if p.usuario == None %}
+                                No
+                                {% else %}
+                                Si
+                                {% endif %}
+                            </td>
+                        
+                            <td>
+                                {% if not rechazos %}
+                                    No
+                                {% else %}
+                                    {% for r in rechazos %}
+                                        {% if r.tarea == p %}
+                                            Si
+                                        {% else %}
+                                            No
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+                        <td>Semáforo</td>
+                        <!-- <td>{{ p.fechaCreacion | title }}</td> -->
+                        <td>
+                            <a href="{% url 'modificar_tarea' p.id%}" class="btn btn-primary">Abrir</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            
+        </div>
+    </div>
+    
+</div>
+{% endblock %}
