@@ -4,7 +4,7 @@ from django.contrib.auth.models import User, Group, Permission
 from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
-from datetime import datetime
+from datetime import datetime, timedelta
 from . import forms
 from . import models
 
@@ -53,7 +53,7 @@ def listar_tareas(request):
                         rechazos.append(rechazo)
                         print(rechazos[0].tarea)
             except rechazo.DoesNotExist:     
-                print("No existen tareas")  
+                print("No existen rechazos")  
     else:
         user = request.user
         tareas = models.Tarea.objects.filter(usuario = user, realizado = False)                                        

@@ -10,8 +10,11 @@
                     <tr>
                         <th>Nombre </th>
                         <th>Realizado</th>
-                        <th>Asignada</th>
-                        <th>Solicitud Rechazo</th>
+                        {% if request.user.is_superuser %}
+                            <th>Asignada</th>
+                            <th>Solicitud Rechazo</th>
+                        {% endif %}
+                        <th>Semáforo</th>
                         <th></th>
                     </tr>
                     {% for p in tareas %}
@@ -25,27 +28,30 @@
                             {% endif %}
                 
                         </td>
-                        <td>
-                            {% if p.usuario == None %}
-                            No
-                            {% else %}
-                            Si
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if not rechazos %}
+                        {% if request.user.is_superuser %}
+                            <td>
+                                {% if p.usuario == None %}
                                 No
-                            {% else %}
-                                {% for r in rechazos %}
-                                    {% if r.tarea == p %}
-                                        Si
-                                    {% else %}
-                                        No
-                                    {% endif %}
-                                {% endfor %}
-                            {% endif %}
-                            
-                        </td>
+                                {% else %}
+                                Si
+                                {% endif %}
+                            </td>
+                        
+                            <td>
+                                {% if not rechazos %}
+                                    No
+                                {% else %}
+                                    {% for r in rechazos %}
+                                        {% if r.tarea == p %}
+                                            Si
+                                        {% else %}
+                                            No
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+                        <td>Semáforo</td>
                         <!-- <td>{{ p.fechaCreacion | title }}</td> -->
                         <td>
                             <a href="{% url 'modificar_tarea' p.id%}" class="btn btn-primary">Abrir</a>
