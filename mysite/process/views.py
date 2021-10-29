@@ -20,6 +20,9 @@ def proyecto(request):
 @login_required()
 def agregar_tarea(request):
     if request.user.has_perm('process.add_tarea'):
+        calculoEstado = models.CalculoEstado()
+        tarea = models.Tarea()
+        semaforo = models.Semaforo()
         data= {
             'form': forms.TareaForm()
         }
@@ -27,6 +30,16 @@ def agregar_tarea(request):
             formulario = forms.TareaForm(data=request.POST, files=request.FILES)
             if formulario.is_valid():
                 formulario.save()
+                tarea = formulario.save()
+            
+                
+                calculoEstado.fechaActualCalculo = datetime.now()
+                calculoEstado.tarea = tarea
+                calculoEstado.save()
+
+                semaforo.calculoEstado = calculoEstado
+                semaforo.save()
+
                 data["mensaje"] = "Guardado correctamente."
             else:
                 data["form"] = formulario
@@ -40,6 +53,8 @@ def listar_tareas(request):
     rechazo = models.MotivoRechazo()
     respuesta = models.RespuestaRechazo()
     rechazos = []
+    calculos = []
+    semaforos = []
     if request.user.is_superuser:
         tareas = models.Tarea.objects.filter(realizado=False)
         for t in tareas:
@@ -57,10 +72,31 @@ def listar_tareas(request):
     else:
         user = request.user
         tareas = models.Tarea.objects.filter(usuario = user, realizado = False)                                        
+    for t in tareas:
+        calculoEstado = models.CalculoEstado.objects.get(tarea=t)
+        calculoEstado.fechaActualCalculo = datetime.now().date()
+        calculoEstado.diasRestantes = t.fechaLimite - calculoEstado.fechaActualCalculo
+        calculoEstado.save()
+        calculos.append(calculoEstado)
+        semaforo = models.Semaforo.objects.get(calculoEstado=calculoEstado)
+        if calculoEstado.diasRestantes > semaforo.semaforoVerde:
+            semaforo.estadoSemaforo = 'v'
+            print("semaforo verde", calculoEstado.diasRestantes)
+        elif calculoEstado.diasRestantes < semaforo.semaforoVerde and calculoEstado.diasRestantes > timedelta(days=0):
+            semaforo.estadoSemaforo = 'a'
+            print("semaforo amarillo", calculoEstado.diasRestantes)
+        elif calculoEstado.diasRestantes < timedelta(days=0):
+            semaforo.estadoSemaforo = 'r'
+            print("pasado de fecha.")
+        semaforo.save()
+        semaforos.append(semaforo)
 
+        
     data = {
         'tareas':tareas ,
-        'rechazos':rechazos
+        'rechazos':rechazos,
+        'semaforos':semaforos,
+        'calculos':calculos
     }
     return render(request, 'process/tarea/listar_tarea.html', data)
 
@@ -110,6 +146,13 @@ def modificar_tarea(request, id):
     respuestaRechazo = models.RespuestaRechazo()
     tarea = get_object_or_404(models.Tarea, id=id)
     data_form = forms.SolicitudRechazoForm()
+
+    ##Código para actualizar semáforo.
+    calculoEstado = models.CalculoEstado.objects.get(tarea=tarea)
+    semaforo = models.Semaforo.objects.get(calculoEstado=calculoEstado)
+
+    ##Códido para obtener si hay o no solicitudes de rechazo para esta tarea, y en
+    ##caso de haber, si tuvo la respuesta.
     try:
         rechazo = models.MotivoRechazo.objects.get(tarea=tarea, respondido=False)
         data_form={'descripcion':rechazo.descripcion,
@@ -134,7 +177,9 @@ def modificar_tarea(request, id):
         'formRespuestaSolicitud': forms.RespuestaSolicitudRespondidaForm(instance=respuestaRechazo),
         'rechazo': rechazo,
         'respuestaRechazo': respuestaRechazo,
-        'tarea': tarea
+        'tarea': tarea,
+        'calculoEstado':calculoEstado,
+        'semaforo':semaforo
     }
 
     if request.method == 'POST':
@@ -184,6 +229,8 @@ def modificar_tarea(request, id):
                 rechazo.save()
                 return redirect(to="listar_tareas")
                 
+   
+
 
     return render(request,'process/tarea/modificar_tarea.html', data)
 

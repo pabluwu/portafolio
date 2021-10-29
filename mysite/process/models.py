@@ -1,5 +1,5 @@
 from django.db import models
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from django.contrib.auth.models import User
 
 class Tarea(models.Model):
@@ -40,6 +40,24 @@ class RespuestaRechazo(models.Model):
 
     def __str__(self):
         return self.respuesta
+    
+class CalculoEstado(models.Model):
+    fechaActualCalculo = models.DateField(auto_now_add=True, auto_now=False)
+    diasRestantes = models.DurationField(default=timedelta())
+    tarea = models.ForeignKey(Tarea, on_delete=models.PROTECT)
+
+    def __str__(self):
+
+        return str(self.pk)
+
+
+class Semaforo(models.Model):
+    estadoSemaforo = models.CharField(blank=False, null=True, max_length=2)
+    semaforoVerde = models.DurationField(default=timedelta(days=7))
+    calculoEstado = models.ForeignKey(CalculoEstado, on_delete=models.PROTECT)
+
+    def __str__(self):
+        return str(self.pk)
 
 """     tarea = models.ForeignKey(Tarea, null=True, on_delete=models.PROTECT)  """
     

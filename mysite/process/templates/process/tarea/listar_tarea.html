@@ -18,49 +18,83 @@
                         <th></th>
                     </tr>
                     {% for p in tareas %}
-                    <tr>
-                        <td>{{ p.nombre | title }}</td>
-                        <td>
-                            {% if p.realizado %}
-                            Si
-                            {% else %}
-                            No
-                            {% endif %}
-                
-                        </td>
-                        {% if request.user.is_superuser %}
+                        <tr>
+                            <td>{{ p.nombre | title }}</td>
                             <td>
-                                {% if p.usuario == None %}
-                                No
-                                {% else %}
+                                {% if p.realizado %}
                                 Si
-                                {% endif %}
-                            </td>
-                        
-                            <td>
-                                {% if not rechazos %}
-                                    No
                                 {% else %}
-                                    {% for r in rechazos %}
-                                        {% if r.tarea == p %}
-                                            Si
-                                        {% else %}
-                                            No
-                                        {% endif %}
-                                    {% endfor %}
+                                No
                                 {% endif %}
+                    
                             </td>
-                        {% endif %}
-                        <td>Semáforo</td>
-                        <!-- <td>{{ p.fechaCreacion | title }}</td> -->
-                        <td>
-                            <a href="{% url 'modificar_tarea' p.id%}" class="btn btn-primary">Abrir</a>
-                        </td>
-                    </tr>
+                            {% if request.user.is_superuser %}
+                                <td>
+                                    {% if p.usuario == None %}
+                                    No
+                                    {% else %}
+                                    Si
+                                    {% endif %}
+                                </td>
+                            
+                                <td>
+                                    {% if not rechazos %}
+                                        No
+                                    {% else %}
+                                        {% for r in rechazos %}
+                                            {% if r.tarea == p %}
+                                                Si
+                                            {% else %}
+                                                No
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                </td>
+                            {% endif %}
+                            <td>
+                                {% for c in calculos %}
+                                    {% if c.tarea == p %}
+                                        {% for s in semaforos %}
+                                            {% if s.calculoEstado == c %}
+                                                {% if s.estadoSemaforo == 'v' %}
+                                                    <input id="semaforoVerde" class="dot verde" type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" name="verAvance" id="">
+                                                {% elif s.estadoSemaforo == 'a' %}
+                                                    <input id="semaforoAmarillo" class="dot amarillo" type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" name="verAvance" id="">    
+                                                {% elif s.estadoSemaforo == 'r' %}
+                                                    <input id="semaforoRojo" class="dot rojo" type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" name="verAvance" id="">    
+                                                {% endif %}   
+                                            {% endif %}
+                                        {% endfor %}                                   
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                
+                                
+                                
+                            </td>
+                            <!-- <td>{{ p.fechaCreacion | title }}</td> -->
+                            <td>
+                                <a href="{% url 'modificar_tarea' p.id%}" class="btn btn-primary">Abrir</a>
+                            </td>
+                        </tr>
                     {% endfor %}
                 </table>
             </div>
             
+        </div>
+    </div>
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Gestión solicitud tarea</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    
+                </div>
+                
+            </div>
         </div>
     </div>
     
