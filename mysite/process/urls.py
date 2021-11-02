@@ -17,5 +17,7 @@ urlpatterns=[
     path('listar/usuarios', views.listar_usuarios, name="listar_usuarios"),
     path('modificar/usuario/<id>', views.modificar_usuario_admin, name="modificar_usuario_admin"),
     path('agregar/grupo', views.agregar_grupo, name="agregar_grupo"),
-
+    path('reportar_problema', views.reportar_problema, name="reportar_problema"),
+    path('listar/reportes_problemas', views.listar_problemas, name="listar_reportes_problemas"),
+    path('ver/problema/<id>', views.responder_problema, name = "responder_problema")
 ]

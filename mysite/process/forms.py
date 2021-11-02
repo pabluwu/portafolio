@@ -128,5 +128,31 @@ class UsuarioFormulario(forms.Form):
     email = forms.CharField(max_length=50)
     grupos = forms.ModelMultipleChoiceField(queryset=Group.objects.all(),widget=forms.CheckboxSelectMultiple)
 
+class ReportarProblemaForm(forms.ModelForm):
+    class Meta:
+        model = models.ReportarProblema
+        fields =  ['descripcion',]
 
+class RevisarReporteForm(forms.ModelForm):
+    class Meta:
+        model = models.ReportarProblema
+        fields = ('descripcion', 'estado', 'tarea')
+        widgets = {
+            'descripcion' : forms.TextInput(attrs={'readonly':'readonly'}),
+            'estado': forms.CheckboxInput(attrs={'disabled':'disabled'}),
+            'tarea' : forms.TextInput(attrs={'readonly':'readonly'}),
+        }
+
+class SolucionProblemaForm(forms.ModelForm):
+    class Meta:
+        model = models.RespuestaProblema
+        fields = ('respuesta',)
+
+class SolucionProblemaOkForm(forms.ModelForm):
+    class Meta:
+        model = models.RespuestaProblema
+        fields = ('respuesta',)
+        widgets = {
+            'respuesta' : forms.TextInput(attrs={'readonly':'readonly'}),
+        }
     

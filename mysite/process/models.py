@@ -53,11 +53,29 @@ class CalculoEstado(models.Model):
 
 class Semaforo(models.Model):
     estadoSemaforo = models.CharField(blank=False, null=True, max_length=2)
-    semaforoVerde = models.DurationField(default=timedelta(days=7))
+    semaforoRojo = models.DurationField(default=timedelta())
     calculoEstado = models.ForeignKey(CalculoEstado, on_delete=models.PROTECT)
 
     def __str__(self):
         return str(self.pk)
+
+class ReportarProblema(models.Model):
+    descripcion = models.TextField(blank=False)
+    estado = models.BooleanField(default=False) #Solucionado / No Solucionado
+    fechaCreacion = models.DateField(auto_now_add=True, auto_now=False)
+    tarea = models.ForeignKey(Tarea, on_delete=models.PROTECT)
+
+    def __str__(self):
+        return self.descripcion 
+
+class RespuestaProblema(models.Model):
+    respuesta = models.TextField(blank=False, null=True)
+    fechaRespuesta = models.DateField(auto_now_add=True, auto_now=False)
+    problema = models.ForeignKey(ReportarProblema, on_delete=models.PROTECT)
+    
+
+    def __str__(self):
+        return self.respuesta
 
 """     tarea = models.ForeignKey(Tarea, null=True, on_delete=models.PROTECT)  """
     

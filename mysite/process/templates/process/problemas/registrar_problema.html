@@ -1,0 +1,45 @@
+{% extends 'process/base.html'%}
+{% load crispy_forms_tags %}
+{% block content %}
+
+<div class="container">
+    <br>
+    <br>
+    <div class="row">
+        <div class="col-12 col-md-6 offset-md-3">
+            <hr>
+            <div class="card">
+                <div class="card-body">
+
+                    <h2>Reportar un problema.</h2>
+                    <hr>
+                    <p class="h6">Ustes está reportando un problema para la tarea: <strong>{{ tarea.nombre }}</strong></p>
+                    <form action="" method="POST" enctype="multipart/form-data">
+
+                        {% csrf_token %}
+                        {{ form | crispy }}
+                        <div class="row justify-content-between">
+                            <div class="file-modificar col-12 col-md-6 offset-md-3">
+
+                                    <input type="hidden" name="form_type" value="modificarform">
+                                    
+                                    <!-- <input type="submit" value="Rechazar Tarea" class="btn btn-primary" name="mybtn"> -->
+                                    <input type="submit" value="Reportar" class="btn btn-danger">
+
+                                    <a href="{% url 'listar_reportes_problemas'%}" class="btn btn-secondary">Cancelar</a>
+                                
+                            </div>
+                        </div>
+                       
+
+                    </form>
+                    {{mensaje}}
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</div>
+</div>
+
+{% endblock %}

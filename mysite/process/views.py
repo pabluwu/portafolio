@@ -38,6 +38,7 @@ def agregar_tarea(request):
                 calculoEstado.save()
 
                 semaforo.calculoEstado = calculoEstado
+                semaforo.semaforoRojo = timedelta(days=7)
                 semaforo.save()
 
                 data["mensaje"] = "Guardado correctamente."
@@ -79,10 +80,10 @@ def listar_tareas(request):
         calculoEstado.save()
         calculos.append(calculoEstado)
         semaforo = models.Semaforo.objects.get(calculoEstado=calculoEstado)
-        if calculoEstado.diasRestantes > semaforo.semaforoVerde:
+        if calculoEstado.diasRestantes > semaforo.semaforoRojo:
             semaforo.estadoSemaforo = 'v'
             print("semaforo verde", calculoEstado.diasRestantes)
-        elif calculoEstado.diasRestantes < semaforo.semaforoVerde and calculoEstado.diasRestantes > timedelta(days=0):
+        elif calculoEstado.diasRestantes < semaforo.semaforoRojo and calculoEstado.diasRestantes > timedelta(days=0):
             semaforo.estadoSemaforo = 'a'
             print("semaforo amarillo", calculoEstado.diasRestantes)
         elif calculoEstado.diasRestantes < timedelta(days=0):
@@ -208,6 +209,13 @@ def modificar_tarea(request, id):
                     tarea.save()
                     return redirect(to="listar_tareas")
             # elif rechazo != None:
+        if request.POST.get("problema") == 'reportar_problema':
+            print("problemaaaaa")
+            request.session['id_tarea'] = tarea.id
+            return redirect(to="reportar_problema")
+            
+
+
                 
                 
         if request.POST.get("form_type") == 'solicitudform':
@@ -386,4 +394,69 @@ def agregar_grupo(request):
         return render(request,'process/grupos_roles/agregar_grupo.html', data)
     else:
         return render(request,'process/error_permiso.html')
+
+##Gestión problemas y errores.
+@login_required()
+def reportar_problema(request):
+
+    id_tarea = request.session.get('id_tarea')
+    tarea = get_object_or_404(models.Tarea, id=id_tarea)
+    reportar_problema = models.ReportarProblema()
+    data = {
+        'form': forms.ReportarProblemaForm(),
+        'tarea': tarea,
+    }
+    if request.method=='POST':
+            formulario = forms.ReportarProblemaForm(data=request.POST, files=request.FILES)
+            if formulario.is_valid():
+                reportar_problema.descripcion = formulario['descripcion'].value()
+                reportar_problema.tarea = tarea
+                reportar_problema.save()    
+
+                data["mensaje"] = "Guardado correctamente."
+
+            else:
+                data["form"] = formulario
+    return render(request,'process/problemas/registrar_problema.html', data)
+
+def listar_problemas(request):
+    reportes = models.ReportarProblema.objects.all()
+    for r in reportes:
+        print(r.tarea.usuario.email)
+    tareas = models.Tarea.objects.all()
+    data = {
+       'reportes': reportes,
+    }
+    return render(request, 'process/problemas/listar_problemas.html', data)
+
+def responder_problema(request, id):
+    reporte = models.ReportarProblema.objects.get(id=id)
+    try:
+        respuesta = models.RespuestaProblema.objects.get(problema=reporte)
+    except:
+        respuesta = models.RespuestaProblema()
+
+    data={
+        'reporte': reporte,
+        'form': forms.RevisarReporteForm(instance=reporte),
+        'formSolucion': forms.SolucionProblemaForm(),
+    }
+    if reporte.estado == False:
+        if request.method=='POST':
+                formulario = forms.SolucionProblemaForm(data=request.POST, files=request.FILES)
+                if formulario.is_valid():
+                    respuesta.respuesta = formulario['respuesta'].value()
+                    respuesta.problema = reporte
+                    reporte.estado = True
+                    reporte.save()
+                    respuesta.save()    
+
+                    data["mensaje"] = "Guardado correctamente."
+
+                else:
+                    data["form"] = formulario
+    else:
+        data["formSolucion"] = forms.SolucionProblemaOkForm(instance=respuesta)
+        print(respuesta.respuesta)
+    return render(request, 'process/problemas/responder_problema.html', data)
 

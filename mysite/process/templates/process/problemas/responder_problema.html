@@ -1,0 +1,41 @@
+{% extends 'process/base.html'%}
+{% load crispy_forms_tags %}
+{% block content %}
+
+<div class="container">
+    <br>
+                    <br>
+    <div class="row">
+        <div class="col-12 col-md-6 offset-md-3">
+            <div class="card">
+                <div class="card-body">
+                    
+                    <h2>Responder reporte.</h2>
+                    <hr>
+                    <form action="" method="POST" enctype="multipart/form-data">
+                        {{ form | crispy }}
+                        
+
+                    </form>
+                    <hr>
+                    <form action="" method="POST">
+                        {% csrf_token %}
+                        {{ formSolucion | crispy }}
+                        <div class="d-flex justify-content-center">
+                            <a href="{% url 'listar_reportes_problemas'%}" class="btn btn-secondary">Cancelar</a>
+                            &nbsp;
+                            {% if reporte.estado == False %}
+                                <input type="submit" value="Enviar Respuesta" class="btn btn-primary">
+                            {% endif %}
+                        </div>
+                    </form>
+                    {{mensaje}}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}
