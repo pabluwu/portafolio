@@ -73,26 +73,28 @@
                 </ul>
             </li>
             {% endif %}
-            <li>
-                <div class="iocn-link">
-                    <!-- <a href="">
-                        <i class='bx bx-grid' ></i>
-                        <span class="link_name">Flujo de tarea.</span>
-                    </a> -->
-                    <div class="link_name_parent">
-                        <i class='bx bx-error'></i>
-                        <span class="link_name">Reportes</span>
+            {% if perms.process.add_respuestaproblema %}
+                <li>
+                    <div class="iocn-link">
+                        <!-- <a href="">
+                            <i class='bx bx-grid' ></i>
+                            <span class="link_name">Flujo de tarea.</span>
+                        </a> -->
+                        <div class="link_name_parent">
+                            <i class='bx bx-error'></i>
+                            <span class="link_name">Reportes</span>
+                        </div>
+                            
+                            
+                        
+                        <i class='bx bxs-down-arrow arrow' ></i>
                     </div>
-                        
-                        
-                    
-                    <i class='bx bxs-down-arrow arrow' ></i>
-                </div>
-                <ul class="sub-menu">
-                    <li><a href="" class="link_name">Flujo de tareas.</a></li>
-                    <li><a href="{% url 'listar_flujo_tareas' %}">Reportes Problemas</a></li>
-                </ul>
-            </li>
+                    <ul class="sub-menu">
+                        <li><a href="" class="link_name">Reportes de Problemas.</a></li>
+                        <li><a href="{% url 'listar_reportes_problemas' %}">Reportes Problemas</a></li>
+                    </ul>
+                </li>
+            {% endif %}
             {% if request.user.is_superuser %}
             <li>
                 <div class="iocn-link">
@@ -109,7 +111,7 @@
                     <li><a href="" class="link_name">Gestión de usuarios.</a></li>
                     <li><a href="{% url 'registrar_usuario' %}">Agregar Usuario</a></li>
                     <li><a href="{% url 'listar_usuarios' %}">Listar Usuario</a></li>
-                    <li><a href="{% url 'agregar_grupo' %}">Agregar rol</a></li>
+                    <li><a href="{% url 'agregar_grupo' %}">Agregar Grupo</a></li>
 
                 </ul>
             </li>

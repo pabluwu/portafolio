@@ -1,19 +1,73 @@
 {% extends 'process/base.html'%}
+{% load crispy_forms_tags %}
 {% block content %}
 <div class="container col-12 col-md-6 offset-md-3">
     <div class="card">
         <div class="card-body">
             <h2>Listado de tareas.</h2>
             <hr>
+            <div class="card-body">
+                <h3>Filtros</h3>
+                <div class="d-flex flex-row align-items-center">
+                    <div class="col-4 d-flex justify-content-center">
+                        {% if request.user.is_superuser %}
+                        <form action="" class="filtroSemaforo" method="POST">
+                            <h4>Usuario</h2>
+                            {% csrf_token %}
+                            <select class="btn btn-secondary" name="filtro_usuario" id="usuario_filtro">
+                                {% for u in usuarios %}
+                                <option value="{{u.id}}">{{u.username}}</option>
+                                {% endfor %}
+                            </select>
+                            
+                            <input class="btn btn-primary" type="submit" name="filtroUsuario" value="Filtrar">
+                        </form>
+                        {% endif %}
+                    </div>
+                    <div class="col-4 d-flex justify-content-center">
+                        <form action="" class="filtroSemaforo" method="POST">
+                            <h4>Color Semáforo</h2>
+                            {% csrf_token %}
+                            <select class="btn btn-secondary" name="filtroEstadoSemaforo" id="estado_semaforo">
+                                <option value="r">Rojo</option>
+                                <option value="a">Amarillo</option>
+                                <option value="v">Verde</option>
+                            </select>
+                            
+                            <input class="btn btn-primary" type="submit" name="filtroSemaforo" value="Filtrar">
+                        </form>
+                    </div>
+                    <div class="col-4 d-flex justify-content-center">
+                        {% if request.user.is_superuser %}
+                        <form action="" class="filtroSemaforo" method="POST">
+                            <h4>Grupos</h2>
+                            {% csrf_token %}
+                            <select class="btn btn-secondary" name="filtro_grupo" id="grupo_filtro">
+                                {% for g in grupos %}
+                                <option value="{{g.id}}">{{g.name}}</option>
+                                {% endfor %}
+                            </select>
+                            
+                            <input class="btn btn-primary" type="submit" name="filtroGrupo" value="Filtrar">
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                <form action="" method="POST">
+                    {% csrf_token %}
+                    <input class="btn btn-secondary" type="submit" name="limpiarFiltro" value="Limpiar Filtros">
+                </form>
+            </div>
             <div class="table-responsive">
+                
                 <table class="table table-striped table-hover table-responsive-sm">
                     <tr>
                         <th>Nombre </th>
                         <th>Realizado</th>
                         {% if request.user.is_superuser %}
                             <th>Asignada</th>
-                            <th>Solicitud Rechazo</th>
                         {% endif %}
+                        <th>Encargado</th>
                         <th>Semáforo</th>
                         <th></th>
                     </tr>
@@ -36,21 +90,10 @@
                                     Si
                                     {% endif %}
                                 </td>
-                            
-                                <td>
-                                    {% if not rechazos %}
-                                        No
-                                    {% else %}
-                                        {% for r in rechazos %}
-                                            {% if r.tarea == p %}
-                                                Si
-                                            {% else %}
-                                                No
-                                            {% endif %}
-                                        {% endfor %}
-                                    {% endif %}
-                                </td>
                             {% endif %}
+                            <td>
+                                {{ p.usuario }}
+                            </td>
                             <td>
                                 {% for c in calculos %}
                                     {% if c.tarea == p %}
@@ -67,10 +110,6 @@
                                         {% endfor %}                                   
                                     {% endif %}
                                 {% endfor %}
-                                
-                                
-                                
-                                
                             </td>
                             <!-- <td>{{ p.fechaCreacion | title }}</td> -->
                             <td>

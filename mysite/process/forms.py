@@ -105,6 +105,8 @@ class GroupForm(forms.Form):
     ('change_tarea', 'Modificar Tarea'),
     ('add_flujotarea', 'Agregar flujo de tarea'),
     ('change_flujotarea', 'Modificar flujo de tarea'),
+    ('add_respuestarechazo','Responder Solicitud Rechazo'),
+    ('add_respuestaproblema','Responder Reportes'),
 ]
     nombre = forms.CharField(max_length=50)
     permisos = forms.MultipleChoiceField(

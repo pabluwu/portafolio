@@ -7,6 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from datetime import datetime, timedelta
 from . import forms
 from . import models
+from . import filters
 
 @login_required()
 def index(request):
@@ -51,28 +52,15 @@ def agregar_tarea(request):
 
 @login_required()
 def listar_tareas(request):
-    rechazo = models.MotivoRechazo()
+    usuario = get_user_model()
+    usuarios = usuario.objects.all()
+    grupos = Group.objects.all()
     respuesta = models.RespuestaRechazo()
     rechazos = []
     calculos = []
     semaforos = []
-    if request.user.is_superuser:
-        tareas = models.Tarea.objects.filter(realizado=False)
-        for t in tareas:
-            try:
-                rechazo = models.MotivoRechazo.objects.get(tarea=t, respondido=False)
-                try:
-                    respuesta = models.RespuestaRechazo.objects.get(motivoRechazo=rechazo)
-                except:
-                    if rechazo:
-                        print(t)
-                        rechazos.append(rechazo)
-                        print(rechazos[0].tarea)
-            except rechazo.DoesNotExist:     
-                print("No existen rechazos")  
-    else:
-        user = request.user
-        tareas = models.Tarea.objects.filter(usuario = user, realizado = False)                                        
+    myFilter = None
+    tareas = models.Tarea.objects.filter(realizado=False)
     for t in tareas:
         calculoEstado = models.CalculoEstado.objects.get(tarea=t)
         calculoEstado.fechaActualCalculo = datetime.now().date()
@@ -82,24 +70,76 @@ def listar_tareas(request):
         semaforo = models.Semaforo.objects.get(calculoEstado=calculoEstado)
         if calculoEstado.diasRestantes > semaforo.semaforoRojo:
             semaforo.estadoSemaforo = 'v'
-            print("semaforo verde", calculoEstado.diasRestantes)
         elif calculoEstado.diasRestantes < semaforo.semaforoRojo and calculoEstado.diasRestantes > timedelta(days=0):
-            semaforo.estadoSemaforo = 'a'
-            print("semaforo amarillo", calculoEstado.diasRestantes)
+            semaforo.estadoSemaforo = 'a'            
         elif calculoEstado.diasRestantes < timedelta(days=0):
             semaforo.estadoSemaforo = 'r'
-            print("pasado de fecha.")
         semaforo.save()
         semaforos.append(semaforo)
+
+
+    if request.user.is_superuser:
+        user = "all"
+        tareas = models.Tarea.objects.filter(realizado=False)
+        myFilter = filters.TareaFilter(request.GET, queryset=tareas)
+        tareas = myFilter.qs
+        if request.POST.get('filtroSemaforo'):
+            tareas = filtroSemaforo(request.POST['filtroEstadoSemaforo'],user)
+        elif request.POST.get('filtroUsuario'):
+            tareas = models.Tarea.objects.filter(realizado=False, usuario=request.POST['filtro_usuario'])
+        elif request.POST.get('limpiarFiltro'):
+            tareas = models.Tarea.objects.filter(realizado=False)
+        elif request.POST.get('filtroGrupo'):
+            usuario_flag = usuario.objects.get(groups=request.POST['filtro_grupo'])
+            tareas = models.Tarea.objects.filter(realizado=False, usuario=usuario_flag)
+        else:
+            tareas = models.Tarea.objects.filter(realizado=False)
+    else:
+        user = request.user
+        tareas = models.Tarea.objects.filter(usuario = user, realizado = False)                                        
+        #Bloque filtro por semáforo.
+        if request.POST.get('filtroSemaforo'):
+            tareas = filtroSemaforo(request.POST['filtroEstadoSemaforo'], user)
+        else:
+            tareas = models.Tarea.objects.filter(usuario = user, realizado = False)                                        
+        
+    
 
         
     data = {
         'tareas':tareas ,
-        'rechazos':rechazos,
         'semaforos':semaforos,
-        'calculos':calculos
+        'calculos':calculos,
+        'filtro':myFilter,
+        'usuarios':usuarios,
+        'grupos':grupos,
     }
     return render(request, 'process/tarea/listar_tarea.html', data)
+
+##Funciona que retorna las tareas en base al filtro del semáforo.
+def filtroSemaforo(estado, user):
+    tarea1 = models.Tarea()
+    semaforos1 = models.Semaforo.objects.filter(estadoSemaforo=estado)
+    calculo2 = []
+    tareas = []
+    for s in semaforos1:
+        calculo1 = models.CalculoEstado.objects.get(id=s.calculoEstado.id)
+        calculo2.append(calculo1)
+    for c in calculo2:
+            if user == 'all':
+                try:
+                    tarea1 = models.Tarea.objects.get(id=c.tarea.id, realizado=False)
+                    tareas.append(tarea1)
+                except tarea1.DoesNotExist:
+                    tarea1 = None
+            else:
+                try:
+                    tarea1 = models.Tarea.objects.get(id=c.tarea.id, realizado=False,usuario=user)
+                    tareas.append(tarea1)
+                except tarea1.DoesNotExist:
+                    tarea1 = None
+            
+    return tareas
 
 @login_required()
 def listar_tareas_completadas(request):
@@ -123,22 +163,8 @@ def tarea_completada(request, id):
     }
 
     if request.method == 'POST':
-        formulario = forms.TareaForm(data=request.POST, instance=tarea, files=request.FILES)
+        return redirect(to="listar_tareas_completadas")
 
-        if formulario.is_valid():
-            if request.POST.get('mybtn'):
-                tarea.usuario=None
-                tarea.save()
-                return redirect(to="listar_tareas")
-            if request.POST.get('terminar'):
-                tarea.realizado = True
-                tarea.fechaTermino = datetime.now()
-                tarea.save()
-                return HttpResponseRedirect('/')
-            else:    
-                formulario.save()
-                return redirect(to="listar_tareas")
-        data["form"] = formulario
     return render(request,'process/tarea/ver_tarea.html', data)
 
 @login_required()
@@ -191,11 +217,12 @@ def modificar_tarea(request, id):
                     tarea.realizado = True
                     tarea.fechaTermino = datetime.now()
                     tarea.save()
-                    return HttpResponseRedirect('/')
+                    return HttpResponseRedirect('/listar/tarea')
                 else:    
                     formulario.save()
                     return redirect(to="listar_tareas")
             data["form"] = formulario
+
         if request.POST.get("form_type") == 'motivoform':
             if  rechazo == None and tarea.usuario != None:
                 formularioRechazo = forms.RechazoForm(data=request.POST, files=request.FILES)
@@ -420,43 +447,49 @@ def reportar_problema(request):
     return render(request,'process/problemas/registrar_problema.html', data)
 
 def listar_problemas(request):
-    reportes = models.ReportarProblema.objects.all()
-    for r in reportes:
-        print(r.tarea.usuario.email)
-    tareas = models.Tarea.objects.all()
-    data = {
-       'reportes': reportes,
-    }
-    return render(request, 'process/problemas/listar_problemas.html', data)
+    if request.user.has_perm('process.add_respuestaproblema'):
+        reportes = models.ReportarProblema.objects.all()
+        for r in reportes:
+            print(r.tarea.usuario.email)
+        tareas = models.Tarea.objects.all()
+        data = {
+        'reportes': reportes,
+        }   
+        return render(request, 'process/problemas/listar_problemas.html', data)
+    else:
+        return render(request,'process/error_permiso.html')
 
 def responder_problema(request, id):
-    reporte = models.ReportarProblema.objects.get(id=id)
-    try:
-        respuesta = models.RespuestaProblema.objects.get(problema=reporte)
-    except:
-        respuesta = models.RespuestaProblema()
+    if request.user.has_perm('process.add_respuestaproblema'):
+        reporte = models.ReportarProblema.objects.get(id=id)
+        try:
+            respuesta = models.RespuestaProblema.objects.get(problema=reporte)
+        except:
+            respuesta = models.RespuestaProblema()
 
-    data={
-        'reporte': reporte,
-        'form': forms.RevisarReporteForm(instance=reporte),
-        'formSolucion': forms.SolucionProblemaForm(),
-    }
-    if reporte.estado == False:
-        if request.method=='POST':
-                formulario = forms.SolucionProblemaForm(data=request.POST, files=request.FILES)
-                if formulario.is_valid():
-                    respuesta.respuesta = formulario['respuesta'].value()
-                    respuesta.problema = reporte
-                    reporte.estado = True
-                    reporte.save()
-                    respuesta.save()    
+        data={
+            'reporte': reporte,
+            'form': forms.RevisarReporteForm(instance=reporte),
+            'formSolucion': forms.SolucionProblemaForm(),
+        }
+        if reporte.estado == False:
+            if request.method=='POST':
+                    formulario = forms.SolucionProblemaForm(data=request.POST, files=request.FILES)
+                    if formulario.is_valid():
+                        respuesta.respuesta = formulario['respuesta'].value()
+                        respuesta.problema = reporte
+                        reporte.estado = True
+                        reporte.save()
+                        respuesta.save()    
 
-                    data["mensaje"] = "Guardado correctamente."
+                        data["mensaje"] = "Guardado correctamente."
 
-                else:
-                    data["form"] = formulario
+                    else:
+                        data["form"] = formulario
+        else:
+            data["formSolucion"] = forms.SolucionProblemaOkForm(instance=respuesta)
+            print(respuesta.respuesta)
+        return render(request, 'process/problemas/responder_problema.html', data)
     else:
-        data["formSolucion"] = forms.SolucionProblemaOkForm(instance=respuesta)
-        print(respuesta.respuesta)
-    return render(request, 'process/problemas/responder_problema.html', data)
+        return render(request,'process/error_permiso.html')
 
