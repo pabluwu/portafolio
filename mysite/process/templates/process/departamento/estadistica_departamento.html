@@ -1,0 +1,70 @@
+{% extends 'process/base.html'%}
+{% load crispy_forms_tags %}
+{% block content %}
+
+<div class="container">
+    <br>
+                    <br>
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <h2>Estadisticas departamento {{departamento.nombre}}.</h2>
+                        <hr>
+                        <!-- <form action="" method="POST" enctype="multipart/form-data">
+    
+                            {% csrf_token %}
+                            {{ form | crispy }}
+                            <div class="d-flex justify-content-center">
+                                <a href="{% url 'listar_flujo_tareas'%}" class="btn btn-secondary">Cancelar</a>
+                                &nbsp;
+                                {% if perms.process.change_flujotarea %}
+                                <input type="submit" value="Editar" class="btn btn-primary">
+                                {% endif %}
+                            </div>
+    
+                        </form> -->
+                        <div class="card col-xl-4 m-1">
+                            <div class="card-body ">
+                                <h5>Tareas Asignadas a este departamento: {{can_tareas_depto}} </h5>
+                                <hr>
+                                <h5>Tareas Realizadas: {{can_tareas_realizadas}} </h5>
+                                <hr>
+                                <h5>Tareas No realizadas: {{can_tareas_no_realizadas}} </h5>
+                            </div>
+                        </div>
+                        
+                        <div class="card col-xl-5 m-1">
+                            <div class="card-body">
+                                <h1>hola</h1>
+                            </div>
+                        </div>
+                        
+                        <div class="card col-xl-2 m-1">
+                             <div class="card-body">
+                                <h1>hola</h1>
+                            </div>
+                        </div>
+                        <div class="card col-xl-6">
+                            <div class="card-body">
+                                <h1>hola</h1>
+                            </div>
+                        </div>
+                        
+                        <div class="card col-xl-6">
+                             <div class="card-body">
+                                <h1>hola</h1>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}

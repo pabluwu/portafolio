@@ -14,8 +14,8 @@ class UserCreationForm(UserCreationForm):
         label='Confirmar contraseña', widget=forms.PasswordInput)
      """
     class Meta:
-        model = User
-        fields=['username','first_name','last_name','email']
+        model = models.User
+        fields=['username','first_name','last_name','email', 'departamento', 'groups']
 
 class RechazoForm(forms.ModelForm):
     class Meta:
@@ -100,35 +100,31 @@ class GroupForm(forms.Form):
 
 
 
-    FAVORITE_COLORS_CHOICES = [
+    opciones_permisos = [
     ('add_tarea', 'Agregar Tarea'),
     ('change_tarea', 'Modificar Tarea'),
     ('add_flujotarea', 'Agregar flujo de tarea'),
     ('change_flujotarea', 'Modificar flujo de tarea'),
     ('add_respuestarechazo','Responder Solicitud Rechazo'),
     ('add_respuestaproblema','Responder Reportes'),
+    ('add_departamento', 'Agregar Departamento'),
+    ('change_departamento','Modificar Departamento'),
 ]
     nombre = forms.CharField(max_length=50)
     permisos = forms.MultipleChoiceField(
         required=False,
         widget=forms.CheckboxSelectMultiple,
-        choices=FAVORITE_COLORS_CHOICES,
+        choices=opciones_permisos,
     )
 
 class UsuarioFormulario(forms.Form):
-    
-    FAVORITE_COLORS_CHOICES = [
-    ('add_tarea', 'Agregar Tarea'),
-    ('change_tarea', 'Modificar Tarea'),
-    ('add_flujotarea', 'Agregar flujo de tarea'),
-    ('change_flujotarea', 'Modificar flujo de tarea'),
-]
-
     username = forms.CharField(max_length=50)
     nombre = forms.CharField(max_length=50)
     apellido = forms.CharField(max_length=50)
     email = forms.CharField(max_length=50)
     grupos = forms.ModelMultipleChoiceField(queryset=Group.objects.all(),widget=forms.CheckboxSelectMultiple)
+    departamento = forms.ModelChoiceField(queryset=models.Departamento.objects.all())
+
 
 class ReportarProblemaForm(forms.ModelForm):
     class Meta:
@@ -158,3 +154,7 @@ class SolucionProblemaOkForm(forms.ModelForm):
             'respuesta' : forms.TextInput(attrs={'readonly':'readonly'}),
         }
     
+class DepartamentoForm(forms.ModelForm):
+    class Meta:
+        model = models.Departamento
+        fields = ('nombre', 'descripcion')

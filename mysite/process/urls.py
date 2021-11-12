@@ -19,5 +19,9 @@ urlpatterns=[
     path('agregar/grupo', views.agregar_grupo, name="agregar_grupo"),
     path('reportar_problema', views.reportar_problema, name="reportar_problema"),
     path('listar/reportes_problemas', views.listar_problemas, name="listar_reportes_problemas"),
-    path('ver/problema/<id>', views.responder_problema, name = "responder_problema")
+    path('ver/problema/<id>', views.responder_problema, name = "responder_problema"),
+    path('agregar/departamento', views.agregar_departamento, name="agregar_departamento"),
+    path('listar/departamentos', views.listar_departamento, name="listar_departamentos"),
+    path('modificar/departamento/<id>', views.modificar_departamento, name="modificar_departamento"),
+    path('estadisticas/departamento/<id>', views.estadisticas_departamento, name="estadistica_departamento"),
 ]

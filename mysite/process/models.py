@@ -1,6 +1,17 @@
 from django.db import models
 from datetime import datetime, date, timedelta
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, AbstractUser
+
+class Departamento(models.Model):
+    nombre = models.CharField(max_length=50, blank=False)
+    descripcion = models.TextField(blank=True)
+    fechaCreacion = models.DateField(auto_now_add=True, auto_now=False)
+    cant_usuarios = models.IntegerField(blank=True, default=0)
+    def __str__(self):
+        return self.nombre
+   
+class User(AbstractUser):
+    departamento = models.ForeignKey(Departamento, null=True, on_delete=models.PROTECT)
 
 class Tarea(models.Model):
     nombre = models.CharField(max_length=50, blank=False)
@@ -14,7 +25,6 @@ class Tarea(models.Model):
     
     def __str__(self):
         return self.nombre
-   
 
 class FlujoTarea(models.Model):
     nombre = models.CharField(max_length=50)

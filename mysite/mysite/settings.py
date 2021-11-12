@@ -91,7 +91,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.oracle',
         'NAME': '127.0.0.1:1521/xe',
-        'USER': 'c##djangotask1',
+        'USER': 'c##djangotask2',
         'PASSWORD': 'admin',
         'TEST': {
             'USER': 'default_test',
@@ -146,3 +146,5 @@ STATICFILES_DIR = (os.path.join(BASE_DIR,'process/static'))
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = 'process.User'

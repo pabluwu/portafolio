@@ -8,8 +8,8 @@
             <hr>
             <div class="card-body">
                 <h3>Filtros</h3>
-                <div class="d-flex flex-row align-items-center">
-                    <div class="col-4 d-flex justify-content-center">
+                <div class="row align-items-start">
+                    <div class="col-xl-4 col-md-4 col-sm-12 d-flex justify-content-center">
                         {% if request.user.is_superuser %}
                         <form action="" class="filtroSemaforo" method="POST">
                             <h4>Usuario</h2>
@@ -24,7 +24,7 @@
                         </form>
                         {% endif %}
                     </div>
-                    <div class="col-4 d-flex justify-content-center">
+                    <div class="col-xl-4 co-md-4 col-sm-12 justify-content-center">
                         <form action="" class="filtroSemaforo" method="POST">
                             <h4>Color Semáforo</h2>
                             {% csrf_token %}
@@ -37,7 +37,7 @@
                             <input class="btn btn-primary" type="submit" name="filtroSemaforo" value="Filtrar">
                         </form>
                     </div>
-                    <div class="col-4 d-flex justify-content-center">
+                    <div class="col-xl-4 col-md-4 col-sm-12 justify-content-center">
                         {% if request.user.is_superuser %}
                         <form action="" class="filtroSemaforo" method="POST">
                             <h4>Grupos</h2>

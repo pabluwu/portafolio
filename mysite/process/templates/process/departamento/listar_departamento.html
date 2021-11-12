@@ -1,0 +1,34 @@
+{% extends 'process/base.html'%}
+{% block content %}
+<div class="container col-12 col-md-6 offset-md-3">
+    <div class="card">
+        <div class="card-body">
+            <h2>Listado de departamentos.</h2>
+            <hr>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover table-responsive-sm">
+                    <tr>
+                        <th>Id Departamento</th>
+                        <th>Nombre</th>
+                        <th>Cant usuarios.</th>
+                        <th></th>
+                    </tr>
+                    {% for p in departamentos %}
+                    <tr>
+                        <td>{{ p.id | title }}</td>
+                        <td>
+                            {{ p.nombre }}
+                        </td>
+                        <td>{{ p.cant_usuarios }}</td>
+                        <td>
+                            <a href="{% url 'modificar_departamento' p.id%}" class="btn btn-primary">Abrir</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+    </div>
+    
+</div>
+{% endblock %}

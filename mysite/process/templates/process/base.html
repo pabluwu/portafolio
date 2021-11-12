@@ -117,6 +117,28 @@
             </li>
 
             {% endif %}
+            {% if perms.process.add_departamento or perms.process.change_departamento %}
+            <li>
+                <div class="iocn-link">
+                    <div class="link_name_parent">
+                        <i class='bx bx-building-house'></i>
+                        <span class="link_name">Gestión deptos.</span>
+                    </div>
+                        
+                        
+                    
+                    <i class='bx bxs-down-arrow arrow' ></i>
+                </div>
+                <ul class="sub-menu">
+                    <li><a href="" class="link_name">Gestión de departamentos.</a></li>
+                    {% if perms.process.add_departamento %}
+                    <li><a href="{% url 'agregar_departamento' %}">Agregar Depto</a></li>
+                    {% endif %}
+                    <li><a href="{% url 'listar_departamentos' %}">Listar Depto</a></li>
+
+                </ul>
+            </li>
+            {% endif %}
             <li>
                 <a href="{% url 'logout' %}">
                     <i class='bx bx-home-smile' ></i>

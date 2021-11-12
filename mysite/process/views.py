@@ -5,6 +5,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
 from datetime import datetime, timedelta
+from django.db import connection
 from . import forms
 from . import models
 from . import filters
@@ -72,7 +73,7 @@ def listar_tareas(request):
             semaforo.estadoSemaforo = 'v'
         elif calculoEstado.diasRestantes < semaforo.semaforoRojo and calculoEstado.diasRestantes > timedelta(days=0):
             semaforo.estadoSemaforo = 'a'            
-        elif calculoEstado.diasRestantes < timedelta(days=0):
+        elif calculoEstado.diasRestantes <= timedelta(days=0):
             semaforo.estadoSemaforo = 'r'
         semaforo.save()
         semaforos.append(semaforo)
@@ -377,7 +378,8 @@ def modificar_usuario_admin(request, id):
         'nombre':usuario.get_short_name(),
         'apellido':usuario.last_name,
         'email':usuario.email,
-        'grupos':usuario.groups.all()}
+        'grupos':usuario.groups.all(),
+        'departamento':usuario.departamento}
         data={
             'form': forms.UsuarioFormulario(data_form)
         }
@@ -391,6 +393,8 @@ def modificar_usuario_admin(request, id):
                 usuario.first_name=formulario['nombre'].value()
                 usuario.last_name=formulario['apellido'].value()
                 usuario.email=formulario['email'].value()
+                departamento = get_object_or_404(models.Departamento, id=formulario['departamento'].value())
+                usuario.departamento=departamento
                 usuario.save()
                 data["mensaje"] = "Modificado correctamente."
                 data["form"] = formulario
@@ -449,9 +453,7 @@ def reportar_problema(request):
 def listar_problemas(request):
     if request.user.has_perm('process.add_respuestaproblema'):
         reportes = models.ReportarProblema.objects.all()
-        for r in reportes:
-            print(r.tarea.usuario.email)
-        tareas = models.Tarea.objects.all()
+        
         data = {
         'reportes': reportes,
         }   
@@ -493,3 +495,108 @@ def responder_problema(request, id):
     else:
         return render(request,'process/error_permiso.html')
 
+
+##Gestión de departamentos.
+def agregar_departamento(request):
+    if request.user.has_perm('process.add_departamento'):
+        data = {
+                'form': forms.DepartamentoForm()
+        }
+        if request.method == 'POST':
+            formulario = forms.DepartamentoForm(data=request.POST, files=request.FILES)
+            if formulario.is_valid():
+                formulario.save()
+                data["mensaje"] = "Guardado correctamente."
+            else:
+                data["form"] = formulario
+
+        return render(request,'process/departamento/agregar_departamento.html', data)
+    else:
+        return render(request,'process/error_permiso.html')
+
+def listar_departamento(request):
+    departamentos = models.Departamento.objects.all()
+    for d in departamentos:
+        usuarios_depto = models.User.objects.filter(departamento=d).count()
+        d.cant_usuarios = usuarios_depto
+        d.save()
+
+    data = {
+    'departamentos': departamentos,
+    }   
+
+    lita = listar_tareas_departamento(1,0)
+    print(len(lita))
+
+    return render(request,'process/departamento/listar_departamento.html', data)
+
+def modificar_departamento(request,id):
+    
+    departamento = get_object_or_404(models.Departamento, id=id)
+    data={
+        'form': forms.DepartamentoForm(instance=departamento),
+        'departamento':departamento,
+    }
+    if request.method == 'POST':
+        formulario = forms.DepartamentoForm(data=request.POST, instance=departamento, files=request.FILES)
+        if formulario.is_valid():
+            formulario.save()
+            return redirect(to="listar_departamentos")
+        data["form"] = formulario
+    return render(request,'process/departamento/modificar_departamento.html', data)
+
+
+
+def estadisticas_departamento(request, id):
+    departamento = get_object_or_404(models.Departamento, id=id)
+
+    ##Tareas total departamento.
+    tareas_departamento = listar_tareas_departamento_total(departamento.id)
+    can_tareas_depto = len(tareas_departamento)
+
+    ##Tareas departamento realizadas.
+    tareas_departamento_realizadas = listar_tareas_departamento(departamento.id,1)
+    can_tareas_realizadas = len(tareas_departamento_realizadas)
+
+    ##Tareas departamento sin realizar.
+    tareas_departamento_no_realizadas = listar_tareas_departamento(departamento.id,0)
+    can_tareas_no_realizadas = len(tareas_departamento_no_realizadas)
+
+    data = {
+        'departamento': departamento,
+        'tareas_departamento':tareas_departamento,
+        'can_tareas_depto':can_tareas_depto,
+        'tareas_departamento_realizadas': tareas_departamento_realizadas,
+        'can_tareas_realizadas':can_tareas_realizadas,
+        'tareas_departamento_no_realizadas':tareas_departamento_no_realizadas,
+        'can_tareas_no_realizadas':can_tareas_no_realizadas,
+
+    }
+    return render(request,'process/departamento/estadistica_departamento.html', data)
+
+def listar_tareas_departamento(id_departamento, realizado):
+    django_cursor = connection.cursor()
+    cursor = django_cursor.connection.cursor()
+    out_cur = django_cursor.connection.cursor()
+    cursor.callproc('SP_LISTAR_TAREAS_DEPARTAMENTO',[id_departamento,realizado,out_cur])
+
+    lista = []
+
+    for l in out_cur:
+        lista.append(l)
+    
+    return lista
+
+
+def listar_tareas_departamento_total(id_departamento):
+    django_cursor = connection.cursor()
+    cursor = django_cursor.connection.cursor()
+    out_cur = django_cursor.connection.cursor()
+    cursor.callproc('SP_LISTAR_TAREAS_DEPARTAMENTO_TOTAL',[id_departamento,out_cur])
+
+    lista = []
+
+    for l in out_cur:
+        lista.append(l)
+    
+    return lista

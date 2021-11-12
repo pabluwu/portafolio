@@ -22,6 +22,7 @@ body {
 
 .sidebar{
     max-width: 268px;
+    min-width: 260px;
     position: fixed;
     top: 0;
     left: 0;
@@ -34,6 +35,7 @@ body {
 
 .sidebar.close{
     width: 78px;
+    min-width: 78px;
 }
 
 .sidebar .logo-details{
@@ -231,7 +233,7 @@ body {
     position: relative;
     height: 100vh;
     left: 260px;
-    width: calc(100% - 268px);   
+    width: calc(100% - 260px);   
     transition: all 0.5s ease;
     -webkit-transition: all 0.5s ease-in;
     -moz-transition: all 0.5s ease-in;
