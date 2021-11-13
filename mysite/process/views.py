@@ -562,6 +562,10 @@ def estadisticas_departamento(request, id):
     tareas_departamento_no_realizadas = listar_tareas_departamento(departamento.id,0)
     can_tareas_no_realizadas = len(tareas_departamento_no_realizadas)
 
+    ##Usuarios por departamento.
+    usuarios_departamento = listar_usuarios_departamento(departamento.id)
+    print(usuarios_departamento)
+
     data = {
         'departamento': departamento,
         'tareas_departamento':tareas_departamento,
@@ -570,6 +574,7 @@ def estadisticas_departamento(request, id):
         'can_tareas_realizadas':can_tareas_realizadas,
         'tareas_departamento_no_realizadas':tareas_departamento_no_realizadas,
         'can_tareas_no_realizadas':can_tareas_no_realizadas,
+        'usuarios_departamento':usuarios_departamento
 
     }
     return render(request,'process/departamento/estadistica_departamento.html', data)
@@ -599,4 +604,16 @@ def listar_tareas_departamento_total(id_departamento):
     for l in out_cur:
         lista.append(l)
     
+    return lista
+
+def listar_usuarios_departamento(id_departamento):
+    django_cursor = connection.cursor()
+    cursor = django_cursor.connection.cursor()
+    out_cur = django_cursor.connection.cursor()
+    cursor.callproc('SP_LISTAR_USUARIOS_DEPARTAMENTO',[id_departamento,out_cur])
+    
+    lista= []
+    for l in out_cur:
+        lista.append(l)
+
     return lista

@@ -47,8 +47,11 @@
                     <form action="" method="POST">
                         {% csrf_token %}
                         <input type="hidden" value="reportar_problema" name="problema" class="btn btn-danger">
+                        <input type=button class="btn btn-info" value="Volver Atrás" onClick="javascript:history.go(-1);">
                         <input type="submit" value="Reportar Problema" name="" class="btn btn-danger">
+                        
                     </form>
+                    
                     
                     <hr>
                     <form action="" method="POST" enctype="multipart/form-data">

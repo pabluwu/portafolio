@@ -48,13 +48,70 @@
                         </div>
                         <div class="card col-xl-6">
                             <div class="card-body">
-                                <h1>hola</h1>
+                                <div class="table-responsive">
+                
+                                    <table class="table table-striped table-hover table-responsive-sm">
+                                        <tr>
+                                            <th>Nombre </th>
+                                            <th>Realizado</th>
+                                            <th>Encargado</th>
+                                            <th>Semáforo</th>
+                                            <th></th>
+                                        </tr>
+                                        {% for p in tareas_departamento %}
+                                            <tr>
+                                                <td>{{ p.1 | title }}</td>
+                                                <td>
+                                                    {% if p.3 == 1 %}
+                                                    Si
+                                                    {% else %}
+                                                    No
+                                                    {% endif %}
+                                        
+                                                </td>
+                                                <td>
+                                                    {{ p.8 }}
+                                                </td>
+                                                <!-- <td>{{ p.fechaCreacion | title }}</td> -->
+                                                <td>
+                                                    <a href="{% url 'modificar_tarea' p.0%}" class="btn btn-primary">Abrir</a>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </table>
+                                </div>
                             </div>
                         </div>
                         
                         <div class="card col-xl-6">
-                             <div class="card-body">
-                                <h1>hola</h1>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                
+                                    <table class="table table-striped table-hover table-responsive-sm">
+                                        <tr>
+                                            <th>Nombre </th>
+                                            <th>Email</th>
+                                            <th>Grupo</th>
+                                            <th></th>
+                                        </tr>
+                                        {% for u in usuarios_departamento %}
+                                            <tr>
+                                                <td>{{ u.1 | title }}</td>
+                                                <td>
+                                                    {{ u.2 }}
+                                        
+                                                </td>
+                                                <td>
+                                                    {{ u.4 }}
+                                                </td>
+                                                <!-- <td>{{ p.fechaCreacion | title }}</td> -->
+                                                <td>
+                                                    <a href="{% url 'modificar_usuario_admin' u.0%}" class="btn btn-primary">Abrir</a>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
