@@ -140,6 +140,26 @@
             </li>
             {% endif %}
             <li>
+                <div class="iocn-link">
+                    <div class="link_name_parent">
+                        <i class='bx bx-chart' ></i>
+                        <span class="link_name">Estadisticas.</span>
+                    </div>
+                        
+                        
+                    
+                    <i class='bx bxs-down-arrow arrow' ></i>
+                </div>
+                <ul class="sub-menu">
+                    <li><a href="" class="link_name">Estadisticas.</a></li>
+                    
+                    <li><a href="{% url 'agregar_departamento' %}">Departamento.</a></li>
+                    
+                    <li><a href="{% url 'listar_departamentos' %}">Listar Depto</a></li>
+
+                </ul>
+            </li>
+            <li>
                 <a href="{% url 'logout' %}">
                     <i class='bx bx-home-smile' ></i>
                     <span class="link_name">Cerrar sesión.</span>
@@ -161,7 +181,7 @@
     </section>
     
 
-       
+    
 
 </body>
 <script

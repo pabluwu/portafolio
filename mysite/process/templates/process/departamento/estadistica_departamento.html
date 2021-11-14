@@ -2,6 +2,11 @@
 {% load crispy_forms_tags %}
 {% block content %}
 
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
 <div class="container">
     <br>
                     <br>
@@ -10,22 +15,11 @@
             <div class="card">
                 <div class="card-body">
                     <div class="row">
+                        <input type=button class="btn btn-info col-xl-2" value="Volver Atrás" onClick="javascript:history.go(-1);">
+                        <hr>
                         <h2>Estadisticas departamento {{departamento.nombre}}.</h2>
                         <hr>
-                        <!-- <form action="" method="POST" enctype="multipart/form-data">
-    
-                            {% csrf_token %}
-                            {{ form | crispy }}
-                            <div class="d-flex justify-content-center">
-                                <a href="{% url 'listar_flujo_tareas'%}" class="btn btn-secondary">Cancelar</a>
-                                &nbsp;
-                                {% if perms.process.change_flujotarea %}
-                                <input type="submit" value="Editar" class="btn btn-primary">
-                                {% endif %}
-                            </div>
-    
-                        </form> -->
-                        <div class="card col-xl-4 m-1">
+                        <div class="card col-xl-4">
                             <div class="card-body ">
                                 <h5>Tareas Asignadas a este departamento: {{can_tareas_depto}} </h5>
                                 <hr>
@@ -35,21 +29,22 @@
                             </div>
                         </div>
                         
-                        <div class="card col-xl-5 m-1">
+                        <div class="card col-xl-4">
                             <div class="card-body">
-                                <h1>hola</h1>
+                                <div id="containerGrafico"></div>
                             </div>
                         </div>
                         
-                        <div class="card col-xl-2 m-1">
+                        <div class="card col-xl-4">
                              <div class="card-body">
-                                <h1>hola</h1>
+                                <div id="containerGrafico2"></div>
                             </div>
                         </div>
                         <div class="card col-xl-6">
                             <div class="card-body">
                                 <div class="table-responsive">
-                
+                                    <h5>Tareas asignadas</h6>
+                                        <hr>
                                     <table class="table table-striped table-hover table-responsive-sm">
                                         <tr>
                                             <th>Nombre </th>
@@ -72,7 +67,15 @@
                                                 <td>
                                                     {{ p.8 }}
                                                 </td>
-                                                <!-- <td>{{ p.fechaCreacion | title }}</td> -->
+                                                <td>
+                                                    {% if p.9 == 'v' %}
+                                                    <input id="semaforoVerde" class="dot verde" type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" name="verAvance" id="">
+                                                    {% elif p.9 == 'a' %}
+                                                        <input id="semaforoAmarillo" class="dot amarillo" type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" name="verAvance" id="">    
+                                                    {% elif p.9 == 'r' %}
+                                                        <input id="semaforoRojo" class="dot rojo" type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" name="verAvance" id="">    
+                                                    {% endif %}   
+                                                </td>
                                                 <td>
                                                     <a href="{% url 'modificar_tarea' p.0%}" class="btn btn-primary">Abrir</a>
                                                 </td>
@@ -86,7 +89,8 @@
                         <div class="card col-xl-6">
                             <div class="card-body">
                                 <div class="table-responsive">
-                
+                                    <h5>Usuarios asignados</h6>
+                                        <hr>
                                     <table class="table table-striped table-hover table-responsive-sm">
                                         <tr>
                                             <th>Nombre </th>
@@ -122,6 +126,98 @@
     </div>
 </div>
 
+
+<script type="application/javascript">
+    Highcharts.chart('containerGrafico', {
+    chart: {
+        plotBackgroundColor: null,
+        plotBorderWidth: null,
+        plotShadow: false,
+        type: 'pie'
+    },
+    title: {
+        text: 'Gráfico de tareas realizadas/no realizadas.'
+    },
+    tooltip: {
+        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+    },
+    accessibility: {
+        point: {
+            valueSuffix: '%'
+        }
+    },
+    plotOptions: {
+        pie: {
+            allowPointSelect: true,
+            cursor: 'pointer',
+            dataLabels: {
+                enabled: true,
+                format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+            }
+        }
+    },
+    series: [{
+        name: 'Brands',
+        colorByPoint: true,
+        data: [{
+            name: 'Tareas Realizadas',
+            y: {{ porcentajes.0 }}
+        }, {
+            name: 'Tareas sin realizar',
+            y: {{ porcentajes.1 }}
+        }]
+    }]
+});
+</script>
+
+<script type="application/javascript">
+    Highcharts.setOptions({
+     colors: ['#c11111 ', ' #fcff41', '#4fe158']
+    });
+    Highcharts.chart('containerGrafico2', {
+    chart: {
+        plotBackgroundColor: null,
+        plotBorderWidth: null,
+        plotShadow: false,
+        type: 'pie'
+    },
+    title: {
+        text: 'Estado de tareas por realizar.'
+    },
+    tooltip: {
+        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+    },
+    accessibility: {
+        point: {
+            valueSuffix: '%'
+        }
+    },
+    plotOptions: {
+        pie: {
+            allowPointSelect: true,
+            cursor: 'pointer',
+            dataLabels: {
+                enabled: true,
+                format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+            }
+        }
+    },
+    series: [{
+        name: 'Brands',
+        colorByPoint: true,
+        data: [{
+            name: 'Tareas en rojo',
+            y: {{ porcentaje_estado_tareas.0 }}
+        }, {
+            name: 'Tareas en amarillo',
+            y: {{ porcentaje_estado_tareas.1 }}
+        },{
+            name: 'Tareas en verde',
+            y: {{ porcentaje_estado_tareas.2 }}
+        }]
+    }]
+});
+</script>
 
 
 {% endblock %}

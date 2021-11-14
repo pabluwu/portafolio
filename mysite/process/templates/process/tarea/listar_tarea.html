@@ -9,7 +9,7 @@
             <div class="card-body">
                 <h3>Filtros</h3>
                 <div class="row align-items-start">
-                    <div class="col-xl-4 col-md-4 col-sm-12 d-flex justify-content-center">
+                    <div class="col-xl-4 col-md-12 col-sm-12 justify-content-center">
                         {% if request.user.is_superuser %}
                         <form action="" class="filtroSemaforo" method="POST">
                             <h4>Usuario</h2>
@@ -24,7 +24,7 @@
                         </form>
                         {% endif %}
                     </div>
-                    <div class="col-xl-4 co-md-4 col-sm-12 justify-content-center">
+                    <div class="col-xl-4 co-md-12 col-sm-12 justify-content-center">
                         <form action="" class="filtroSemaforo" method="POST">
                             <h4>Color Semáforo</h2>
                             {% csrf_token %}
@@ -37,14 +37,14 @@
                             <input class="btn btn-primary" type="submit" name="filtroSemaforo" value="Filtrar">
                         </form>
                     </div>
-                    <div class="col-xl-4 col-md-4 col-sm-12 justify-content-center">
+                    <div class="col-xl-4 col-md-12 col-sm-12 justify-content-center">
                         {% if request.user.is_superuser %}
                         <form action="" class="filtroSemaforo" method="POST">
                             <h4>Grupos</h2>
                             {% csrf_token %}
                             <select class="btn btn-secondary" name="filtro_grupo" id="grupo_filtro">
-                                {% for g in grupos %}
-                                <option value="{{g.id}}">{{g.name}}</option>
+                                {% for g in departamento_combo %}
+                                <option value="{{g.id}}">{{g.nombre}}</option>
                                 {% endfor %}
                             </select>
                             

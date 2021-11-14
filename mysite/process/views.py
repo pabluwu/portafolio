@@ -1,11 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, get_user_model
 from django.contrib.auth.models import User, Group, Permission
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
 from datetime import datetime, timedelta
 from django.db import connection
+from django.core.paginator import Paginator
 from . import forms
 from . import models
 from . import filters
@@ -55,13 +56,13 @@ def agregar_tarea(request):
 def listar_tareas(request):
     usuario = get_user_model()
     usuarios = usuario.objects.all()
-    grupos = Group.objects.all()
+    departamento_combo = models.Departamento.objects.all()
     respuesta = models.RespuestaRechazo()
     rechazos = []
     calculos = []
     semaforos = []
     myFilter = None
-    tareas = models.Tarea.objects.filter(realizado=False)
+    tareas = models.Tarea.objects.filter(realizado=False)    
     for t in tareas:
         calculoEstado = models.CalculoEstado.objects.get(tarea=t)
         calculoEstado.fechaActualCalculo = datetime.now().date()
@@ -91,8 +92,13 @@ def listar_tareas(request):
         elif request.POST.get('limpiarFiltro'):
             tareas = models.Tarea.objects.filter(realizado=False)
         elif request.POST.get('filtroGrupo'):
-            usuario_flag = usuario.objects.get(groups=request.POST['filtro_grupo'])
-            tareas = models.Tarea.objects.filter(realizado=False, usuario=usuario_flag)
+            departamento = get_object_or_404(models.Departamento, id=request.POST['filtro_grupo'])
+            tareas_departamento = listar_tareas_departamento(departamento.id,0)
+            tareas = []
+            for t in tareas_departamento:
+                tarea1 = models.Tarea.objects.get(id=t[0])
+                tareas.append(tarea1) 
+            # tareas = models.Tarea.objects.filter(realizado=False, usuario=usuario_flag)
         else:
             tareas = models.Tarea.objects.filter(realizado=False)
     else:
@@ -104,8 +110,6 @@ def listar_tareas(request):
         else:
             tareas = models.Tarea.objects.filter(usuario = user, realizado = False)                                        
         
-    
-
         
     data = {
         'tareas':tareas ,
@@ -113,7 +117,7 @@ def listar_tareas(request):
         'calculos':calculos,
         'filtro':myFilter,
         'usuarios':usuarios,
-        'grupos':grupos,
+        'departamento_combo':departamento_combo,
     }
     return render(request, 'process/tarea/listar_tarea.html', data)
 
@@ -194,9 +198,6 @@ def modificar_tarea(request, id):
         respuestaRechazo = None
 
     forms 
-
-    print(rechazo)
-    print(respuestaRechazo)
     data={
         'form': forms.TareaForm(instance=tarea),
         'formRechazo': forms.RechazoForm(),
@@ -238,7 +239,7 @@ def modificar_tarea(request, id):
                     return redirect(to="listar_tareas")
             # elif rechazo != None:
         if request.POST.get("problema") == 'reportar_problema':
-            print("problemaaaaa")
+            
             request.session['id_tarea'] = tarea.id
             return redirect(to="reportar_problema")
             
@@ -330,7 +331,6 @@ def registrar_usuario(request):
 
         if request.method=='POST':
             formulario = forms.UserCreationForm(data=request.POST)
-            print("formulario")
             username = formulario['username'].value()
             password1 = formulario['password1'].value()
             password2 = formulario['password2'].value()
@@ -340,7 +340,6 @@ def registrar_usuario(request):
                         if formulario.is_valid():
                             formulario.save()
                             data["mensaje"] = "Guardado correctamente."
-                            print("guardado")
                         else:
                             data["mensaje"] = "Contraseña insegura."
                             data["form"] = formulario
@@ -420,7 +419,6 @@ def agregar_grupo(request):
             for i in permisos:
                 permiso = Permission.objects.get(codename=i)
                 grupo_nuevo.permissions.add(permiso)
-                print(i)
             grupo_nuevo.save()
         return render(request,'process/grupos_roles/agregar_grupo.html', data)
     else:
@@ -489,8 +487,7 @@ def responder_problema(request, id):
                     else:
                         data["form"] = formulario
         else:
-            data["formSolucion"] = forms.SolucionProblemaOkForm(instance=respuesta)
-            print(respuesta.respuesta)
+            data["formSolucion"] = forms.SolucionProblemaOkForm(instance=respuesta)            
         return render(request, 'process/problemas/responder_problema.html', data)
     else:
         return render(request,'process/error_permiso.html')
@@ -526,7 +523,6 @@ def listar_departamento(request):
     }   
 
     lita = listar_tareas_departamento(1,0)
-    print(len(lita))
 
     return render(request,'process/departamento/listar_departamento.html', data)
 
@@ -549,6 +545,7 @@ def modificar_departamento(request,id):
 
 def estadisticas_departamento(request, id):
     departamento = get_object_or_404(models.Departamento, id=id)
+    porcentajes=[]
 
     ##Tareas total departamento.
     tareas_departamento = listar_tareas_departamento_total(departamento.id)
@@ -557,14 +554,30 @@ def estadisticas_departamento(request, id):
     ##Tareas departamento realizadas.
     tareas_departamento_realizadas = listar_tareas_departamento(departamento.id,1)
     can_tareas_realizadas = len(tareas_departamento_realizadas)
+    porcentaje_tareas_realizada = (can_tareas_realizadas*100)/can_tareas_depto
+    porcentajes.append(porcentaje_tareas_realizada)
 
     ##Tareas departamento sin realizar.
     tareas_departamento_no_realizadas = listar_tareas_departamento(departamento.id,0)
     can_tareas_no_realizadas = len(tareas_departamento_no_realizadas)
+    porcentaje_tareas_no_realizada = (can_tareas_no_realizadas*100)/can_tareas_depto
+    porcentajes.append(porcentaje_tareas_no_realizada)
 
     ##Usuarios por departamento.
     usuarios_departamento = listar_usuarios_departamento(departamento.id)
-    print(usuarios_departamento)
+
+    ##Listar estados de tareas sin realizar.
+    porcentaje_estado_tareas=[]
+    estado_tarea_rojo = listar_estado_tareas(departamento.id,0,'r')
+    estado_tarea_amarilla = listar_estado_tareas(departamento.id,0,'a')
+    estado_tarea_verde = listar_estado_tareas(departamento.id,0,'v')
+
+    porcentaje_estado_rojo = (len(estado_tarea_rojo)*100)/can_tareas_no_realizadas
+    porcentaje_estado_amarilla = (len(estado_tarea_amarilla)*100)/can_tareas_no_realizadas
+    porcentaje_estado_verde = (len(estado_tarea_verde)*100)/can_tareas_no_realizadas
+    porcentaje_estado_tareas.append(porcentaje_estado_rojo)
+    porcentaje_estado_tareas.append(porcentaje_estado_amarilla)
+    porcentaje_estado_tareas.append(porcentaje_estado_verde)
 
     data = {
         'departamento': departamento,
@@ -574,7 +587,9 @@ def estadisticas_departamento(request, id):
         'can_tareas_realizadas':can_tareas_realizadas,
         'tareas_departamento_no_realizadas':tareas_departamento_no_realizadas,
         'can_tareas_no_realizadas':can_tareas_no_realizadas,
-        'usuarios_departamento':usuarios_departamento
+        'usuarios_departamento':usuarios_departamento,
+        'porcentajes':porcentajes,
+        'porcentaje_estado_tareas':porcentaje_estado_tareas,
 
     }
     return render(request,'process/departamento/estadistica_departamento.html', data)
@@ -617,3 +632,16 @@ def listar_usuarios_departamento(id_departamento):
         lista.append(l)
 
     return lista
+
+def listar_estado_tareas(id_departamento, realizado, estado):
+    django_cursor = connection.cursor()
+    cursor = django_cursor.connection.cursor()
+    out_cur = django_cursor.connection.cursor()
+    cursor.callproc('SP_LISTAR_ESTADO_TAREAS',[id_departamento,realizado,estado,out_cur])
+    
+    lista= []
+    for l in out_cur:
+        lista.append(l)
+
+    return lista
+    
