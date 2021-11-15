@@ -391,19 +391,21 @@ def modificar_usuario_admin(request, id):
             formulario = forms.UsuarioFormulario(data=request.POST, files=request.FILES)
             if formulario.is_valid():
                 usuario.groups.clear()
-                for i in formulario['grupos'].value():
-                    print(i)
-                    grupos = Group.objects.get(id=i)
-                    print(grupos)
-                    usuario.groups.add(grupos)
-                    grupos.user_set.add(usuario)
+                grupos = Group.objects.get(id=formulario['grupos'].value())
+                usuario.groups.add(grupos)
+                # for i in formulario['grupos'].value():
+                #     print(i)
+                #     grupos = Group.objects.get(id=i)
+                #     print(grupos)
+                #     usuario.groups.add(grupos)
+                #     grupos.user_set.add(usuario)
                 usuario.first_name=formulario['nombre'].value()
                 usuario.last_name=formulario['apellido'].value()
                 usuario.email=formulario['email'].value()
                 departamento = get_object_or_404(models.Departamento, id=formulario['departamento'].value())
                 usuario.departamento=departamento
-                print(grupos)
-                print(usuario.groups)
+                # print(grupos)
+                # print(usuario.groups)
                 usuario.save()
                 print(usuario.groups)
                 data["mensaje"] = "Modificado correctamente."
@@ -462,7 +464,7 @@ def reportar_problema(request):
 def listar_problemas(request):
     # if request.user.has_perm('process.add_respuestaproblema'):
     reportes = []
-    if request.user.is_superuser:
+    if request.user.is_superuser or request.user.has_perm('process.add_respuestaproblema') :
         reportes = models.ReportarProblema.objects.all()
     else:
         user = request.user
