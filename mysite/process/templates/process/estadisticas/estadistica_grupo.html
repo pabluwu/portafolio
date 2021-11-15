@@ -1,0 +1,223 @@
+{% extends 'process/base.html'%}
+{% load crispy_forms_tags %}
+{% block content %}
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
+<div class="container">
+    <br>
+                    <br>
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <input type=button class="btn btn-info col-xl-2" value="Volver Atrás" onClick="javascript:history.go(-1);">
+                        <hr>
+                        <h2>Estadisticas grupo {{grupo.name}}.</h2>
+                        <hr>
+                        <div class="card col-xl-4">
+                            <div class="card-body ">
+                                <h5>Tareas Asignadas a este grupo: {{can_tareas_grupo}} </h5>
+                                <hr>
+                                <h5>Tareas Realizadas: {{can_tareas_realizadas}} </h5>
+                                <hr>
+                                <h5>Tareas No realizadas: {{can_tareas_no_realizadas}} </h5>
+                            </div>
+                        </div>
+                        
+                        <div class="card col-xl-4">
+                            <div class="card-body">
+                                <div id="containerGrafico"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="card col-xl-4">
+                             <div class="card-body">
+                                <div id="containerGrafico2"></div>
+                            </div>
+                        </div>
+                        <div class="card col-xl-6">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <h5>Tareas asignadas</h6>
+                                        <hr>
+                                    <table class="table table-striped table-hover table-responsive-sm">
+                                        <tr>
+                                            <th>Nombre </th>
+                                            <th>Realizado</th>
+                                            <th>Encargado</th>
+                                            <th>Semáforo</th>
+                                            <th></th>
+                                        </tr>
+                                        {% for p in tareas_grupo %}
+                                            <tr>
+                                                <td>{{ p.1 | title }}</td>
+                                                <td>
+                                                    {% if p.2 == 1 %}
+                                                    Si
+                                                    {% else %}
+                                                    No
+                                                    {% endif %}
+                                        
+                                                </td>
+                                                <td>
+                                                    {{ p.4 }}
+                                                </td>
+                                                <td>
+                                                    {% if p.5 == 'v' %}
+                                                    <input id="semaforoVerde" class="dot verde" type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" name="verAvance" id="">
+                                                    {% elif p.5 == 'a' %}
+                                                        <input id="semaforoAmarillo" class="dot amarillo" type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" name="verAvance" id="">    
+                                                    {% elif p.5 == 'r' %}
+                                                        <input id="semaforoRojo" class="dot rojo" type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" name="verAvance" id="">    
+                                                    {% endif %}   
+                                                </td>
+                                                <td>
+                                                    <a href="{% url 'modificar_tarea' p.0%}" class="btn btn-primary">Abrir</a>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card col-xl-6">
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <h5>Usuarios asignados</h6>
+                                        <hr>
+                                    <table class="table table-striped table-hover table-responsive-sm">
+                                        <tr>
+                                            <th>Nombre </th>
+                                            <th>Email</th>
+                                            <th>Grupo</th>
+                                            <th></th>
+                                        </tr>
+                                        {% for u in usuarios_grupo %}
+                                            <tr>
+                                                <td>{{ u.1 | title }}</td>
+                                                <td>
+                                                    {{ u.2 }}
+                                        
+                                                </td>
+                                                <td>
+                                                    {{ u.4 }}
+                                                </td>
+                                                <!-- <td>{{ p.fechaCreacion | title }}</td> -->
+                                                <td>
+                                                    <a href="{% url 'modificar_usuario_admin' u.0%}" class="btn btn-primary">Abrir</a>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="application/javascript">
+    Highcharts.chart('containerGrafico', {
+    chart: {
+        plotBackgroundColor: null,
+        plotBorderWidth: null,
+        plotShadow: false,
+        type: 'pie'
+    },
+    title: {
+        text: 'Gráfico de tareas realizadas/no realizadas.'
+    },
+    tooltip: {
+        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+    },
+    accessibility: {
+        point: {
+            valueSuffix: '%'
+        }
+    },
+    plotOptions: {
+        pie: {
+            allowPointSelect: true,
+            cursor: 'pointer',
+            dataLabels: {
+                enabled: true,
+                format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+            }
+        }
+    },
+    series: [{
+        name: 'Brands',
+        colorByPoint: true,
+        data: [{
+            name: 'Tareas Realizadas',
+            y: {{ porcentajes.0 }}
+        }, {
+            name: 'Tareas sin realizar',
+            y: {{ porcentajes.1 }}
+        }]
+    }]
+});
+</script>
+
+<script type="application/javascript">
+    Highcharts.setOptions({
+     colors: ['#c11111 ', ' #fcff41', '#4fe158']
+    });
+    Highcharts.chart('containerGrafico2', {
+    chart: {
+        plotBackgroundColor: null,
+        plotBorderWidth: null,
+        plotShadow: false,
+        type: 'pie'
+    },
+    title: {
+        text: 'Estado de tareas por realizar.'
+    },
+    tooltip: {
+        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+    },
+    accessibility: {
+        point: {
+            valueSuffix: '%'
+        }
+    },
+    plotOptions: {
+        pie: {
+            allowPointSelect: true,
+            cursor: 'pointer',
+            dataLabels: {
+                enabled: true,
+                format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+            }
+        }
+    },
+    series: [{
+        name: 'Brands',
+        colorByPoint: true,
+        data: [{
+            name: 'Tareas en rojo',
+            y: {{ porcentaje_estado_tareas.0 }}
+        }, {
+            name: 'Tareas en amarillo',
+            y: {{ porcentaje_estado_tareas.1 }}
+        },{
+            name: 'Tareas en verde',
+            y: {{ porcentaje_estado_tareas.2 }}
+        }]
+    }]
+});
+</script>
+
+
+{% endblock %}

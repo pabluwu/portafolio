@@ -1,3 +1,4 @@
+
 {% extends 'process/base.html'%}
 {% block content %}
 <div class="container col-12 col-md-6 offset-md-3">
@@ -13,7 +14,7 @@
                         <th>Email</th>
                         <th></th>
                     </tr>
-                    {% for p in users %}
+                    {% for p in usuarios %}
                     <tr>
                         <td>{{ p.username | title }}</td>
                         <td>{{ p.first_name }}</td>
@@ -21,7 +22,7 @@
                         <!-- <td>{{ p.fechaCreacion | title }}</td> -->
                         <td>
     
-                            <a href="{% url 'modificar_usuario_admin' p.id%}" class="btn btn-primary">Abrir</a>
+                            <a href="{% url 'estadisticas_usuario' p.id%}" class="btn btn-success">Ver estadisticas.</a>
                         </td>
                     </tr>
                     {% endfor %}

@@ -59,9 +59,7 @@
                         {% csrf_token %}
                         {{ form | crispy }}
                         <div class="row justify-content-between">
-                            <div class="file-modificar col-12 col-md-6 offset-md-3">
-
-                                    <input type="hidden" name="form_type" value="modificarform">
+                            <div class="file-modificar col-xl-6 col-md-6 ">
                                     
                                     <!-- <input type="submit" value="Rechazar Tarea" class="btn btn-primary" name="mybtn"> -->
                                     {% if rechazo == None or tarea.usuario != None %}
@@ -73,14 +71,24 @@
                                         data-bs-target="#exampleModal">Motivo Rechazo</button>
                                     
                                     {% endif %}
-                                    <input type="submit" value="Terminar tarea" class="btn btn-primary" name="terminar">
-                                    
-                                    {% if perms.process.change_tarea %}
-                                    <input type="submit" value="Editar" class="btn btn-primary">
-                                    {% endif %}
-                                    <a href="{% url 'listar_tareas'%}" class="btn btn-secondary">Cancelar</a>
                                 
                             </div>
+                            <div class="file-modificar col-xl-6 col-md-6 ">
+                                <input type="submit" value="Terminar tarea" class="btn btn-primary" name="terminar">
+                            
+                            </div>
+                            <div class="file-modificar col-xl-6 col-md-6 ">
+                                {% if perms.process.change_tarea %}
+                                <input type="submit" value="Editar" class="btn btn-primary">
+                                {% endif %}                            
+                            
+                            </div>
+                            <div class="file-modificar col-xl-6 col-md-6 ">                                
+
+                                <a href="{% url 'listar_tareas'%}" class="btn btn-secondary">Cancelar</a>
+                            
+                            </div>
+                            
                         </div>
                        
 

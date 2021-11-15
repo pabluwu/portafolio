@@ -338,6 +338,10 @@ def registrar_usuario(request):
                 if len(password1) > 7:
                     if password1 == password2:
                         if formulario.is_valid():
+                            user = models.User.objects.get(username=formulario.save())
+                            grupos = Group.objects.get(id=formulario['groups'].value())                            
+                            user.groups.add(grupos)  
+                            user.save()                         
                             formulario.save()
                             data["mensaje"] = "Guardado correctamente."
                         else:
@@ -377,24 +381,31 @@ def modificar_usuario_admin(request, id):
         'nombre':usuario.get_short_name(),
         'apellido':usuario.last_name,
         'email':usuario.email,
-        'grupos':usuario.groups.all(),
+        'grupos':usuario.groups.first(),
         'departamento':usuario.departamento}
         data={
-            'form': forms.UsuarioFormulario(data_form)
+            'form': forms.UsuarioFormulario(data_form),
+            'user':usuario
         }
         if request.method=='POST':
             formulario = forms.UsuarioFormulario(data=request.POST, files=request.FILES)
             if formulario.is_valid():
                 usuario.groups.clear()
                 for i in formulario['grupos'].value():
-                    grupos, created = Group.objects.get_or_create(id=i)
+                    print(i)
+                    grupos = Group.objects.get(id=i)
+                    print(grupos)
                     usuario.groups.add(grupos)
+                    grupos.user_set.add(usuario)
                 usuario.first_name=formulario['nombre'].value()
                 usuario.last_name=formulario['apellido'].value()
                 usuario.email=formulario['email'].value()
                 departamento = get_object_or_404(models.Departamento, id=formulario['departamento'].value())
                 usuario.departamento=departamento
+                print(grupos)
+                print(usuario.groups)
                 usuario.save()
+                print(usuario.groups)
                 data["mensaje"] = "Modificado correctamente."
                 data["form"] = formulario
 
@@ -449,29 +460,41 @@ def reportar_problema(request):
     return render(request,'process/problemas/registrar_problema.html', data)
 
 def listar_problemas(request):
-    if request.user.has_perm('process.add_respuestaproblema'):
+    # if request.user.has_perm('process.add_respuestaproblema'):
+    reportes = []
+    if request.user.is_superuser:
         reportes = models.ReportarProblema.objects.all()
-        
-        data = {
-        'reportes': reportes,
-        }   
-        return render(request, 'process/problemas/listar_problemas.html', data)
     else:
-        return render(request,'process/error_permiso.html')
+        user = request.user
+        tareas = models.Tarea.objects.filter(usuario=user)
+        for t in tareas:
+            print(t)
+            try:
+                r = models.ReportarProblema.objects.get(tarea=t)
+                reportes.append(r)
+            except:
+                pass
+        print(reportes)
+        
+    
+    data = {
+    'reportes': reportes,
+    }   
+    return render(request, 'process/problemas/listar_problemas.html', data)
+    
 
 def responder_problema(request, id):
-    if request.user.has_perm('process.add_respuestaproblema'):
-        reporte = models.ReportarProblema.objects.get(id=id)
-        try:
-            respuesta = models.RespuestaProblema.objects.get(problema=reporte)
-        except:
-            respuesta = models.RespuestaProblema()
-
-        data={
+    reporte = models.ReportarProblema.objects.get(id=id)
+    try:
+        respuesta = models.RespuestaProblema.objects.get(problema=reporte)
+    except:
+        respuesta = models.RespuestaProblema()
+    data={
             'reporte': reporte,
             'form': forms.RevisarReporteForm(instance=reporte),
             'formSolucion': forms.SolucionProblemaForm(),
         }
+    if request.user.has_perm('process.add_respuestaproblema'):
         if reporte.estado == False:
             if request.method=='POST':
                     formulario = forms.SolucionProblemaForm(data=request.POST, files=request.FILES)
@@ -486,11 +509,11 @@ def responder_problema(request, id):
 
                     else:
                         data["form"] = formulario
-        else:
-            data["formSolucion"] = forms.SolucionProblemaOkForm(instance=respuesta)            
+                        
         return render(request, 'process/problemas/responder_problema.html', data)
     else:
-        return render(request,'process/error_permiso.html')
+        data["formSolucion"] = forms.SolucionProblemaOkForm(instance=respuesta)
+        return render(request, 'process/problemas/responder_problema.html', data)
 
 
 ##Gestión de departamentos.
@@ -541,11 +564,10 @@ def modificar_departamento(request,id):
         data["form"] = formulario
     return render(request,'process/departamento/modificar_departamento.html', data)
 
-
-
 def estadisticas_departamento(request, id):
     departamento = get_object_or_404(models.Departamento, id=id)
     porcentajes=[]
+    porcentaje_estado_tareas=[]
 
     ##Tareas total departamento.
     tareas_departamento = listar_tareas_departamento_total(departamento.id)
@@ -554,30 +576,36 @@ def estadisticas_departamento(request, id):
     ##Tareas departamento realizadas.
     tareas_departamento_realizadas = listar_tareas_departamento(departamento.id,1)
     can_tareas_realizadas = len(tareas_departamento_realizadas)
-    porcentaje_tareas_realizada = (can_tareas_realizadas*100)/can_tareas_depto
-    porcentajes.append(porcentaje_tareas_realizada)
+    
 
     ##Tareas departamento sin realizar.
     tareas_departamento_no_realizadas = listar_tareas_departamento(departamento.id,0)
     can_tareas_no_realizadas = len(tareas_departamento_no_realizadas)
-    porcentaje_tareas_no_realizada = (can_tareas_no_realizadas*100)/can_tareas_depto
-    porcentajes.append(porcentaje_tareas_no_realizada)
+    
 
     ##Usuarios por departamento.
     usuarios_departamento = listar_usuarios_departamento(departamento.id)
 
-    ##Listar estados de tareas sin realizar.
-    porcentaje_estado_tareas=[]
-    estado_tarea_rojo = listar_estado_tareas(departamento.id,0,'r')
-    estado_tarea_amarilla = listar_estado_tareas(departamento.id,0,'a')
-    estado_tarea_verde = listar_estado_tareas(departamento.id,0,'v')
+    try:
+        ##Porcentajes
 
-    porcentaje_estado_rojo = (len(estado_tarea_rojo)*100)/can_tareas_no_realizadas
-    porcentaje_estado_amarilla = (len(estado_tarea_amarilla)*100)/can_tareas_no_realizadas
-    porcentaje_estado_verde = (len(estado_tarea_verde)*100)/can_tareas_no_realizadas
-    porcentaje_estado_tareas.append(porcentaje_estado_rojo)
-    porcentaje_estado_tareas.append(porcentaje_estado_amarilla)
-    porcentaje_estado_tareas.append(porcentaje_estado_verde)
+        porcentaje_tareas_realizada = (can_tareas_realizadas*100)/can_tareas_depto
+        porcentajes.append(porcentaje_tareas_realizada)
+        porcentaje_tareas_no_realizada = (can_tareas_no_realizadas*100)/can_tareas_depto
+        porcentajes.append(porcentaje_tareas_no_realizada)
+        
+        estado_tarea_rojo = listar_estado_tareas_departamento(departamento.id,0,'r')
+        estado_tarea_amarilla = listar_estado_tareas_departamento(departamento.id,0,'a')
+        estado_tarea_verde = listar_estado_tareas_departamento(departamento.id,0,'v')
+
+        porcentaje_estado_rojo = (len(estado_tarea_rojo)*100)/can_tareas_no_realizadas
+        porcentaje_estado_amarilla = (len(estado_tarea_amarilla)*100)/can_tareas_no_realizadas
+        porcentaje_estado_verde = (len(estado_tarea_verde)*100)/can_tareas_no_realizadas
+        porcentaje_estado_tareas.append(porcentaje_estado_rojo)
+        porcentaje_estado_tareas.append(porcentaje_estado_amarilla)
+        porcentaje_estado_tareas.append(porcentaje_estado_verde)
+    except:
+        pass
 
     data = {
         'departamento': departamento,
@@ -592,8 +620,158 @@ def estadisticas_departamento(request, id):
         'porcentaje_estado_tareas':porcentaje_estado_tareas,
 
     }
-    return render(request,'process/departamento/estadistica_departamento.html', data)
+    return render(request,'process/estadisticas/estadistica_departamento.html', data)
 
+def listar_departamento_estadistica(request):
+    departamentos = models.Departamento.objects.all()
+    for d in departamentos:
+        usuarios_depto = models.User.objects.filter(departamento=d).count()
+        d.cant_usuarios = usuarios_depto
+        d.save()
+
+    data = {
+    'departamentos': departamentos,
+    }   
+    
+
+    return render(request,'process/estadisticas/listar_departamento_estadisticas.html', data)
+
+def listar_grupo_estadistica(request):
+    grupos = listar_grupos()
+
+    data = {
+    'grupos': grupos,
+    }   
+
+
+    return render(request,'process/estadisticas/listar_grupo_estadistica.html', data)
+
+def estadisticas_grupo(request,id):
+    grupo = get_object_or_404(Group, id=id)
+    tareas_no_realizada = []
+    tareas_realizada = []
+    porcentajes = []
+    porcentaje_estado_tareas=[]
+
+    tareas_grupo = listar_tareas_grupo(id)
+    for t in tareas_grupo:
+        if t[2] == 0:
+            tareas_no_realizada.append(t)
+        elif t[2] == 1:
+            tareas_realizada.append(t)
+    can_tareas_grupo = len(tareas_grupo)
+    can_tareas_no_realizadas = len(tareas_no_realizada)
+    can_tareas_realizadas = len(tareas_realizada)
+
+    usuarios_grupo = listar_usuarios_grupo(id)
+    try:
+        ##Porcentajes
+        porcentaje_tareas_no_realizada = (can_tareas_no_realizadas*100)/can_tareas_grupo
+        porcentaje_tareas_realizada = (can_tareas_realizadas*100)/can_tareas_grupo
+        porcentajes.append(porcentaje_tareas_realizada)
+        porcentajes.append(porcentaje_tareas_no_realizada)
+        
+        ##Porcentaje estado tarea
+        estado_tarea_rojo = listar_estado_tareas_grupo(id,0,'r')
+        estado_tarea_amarilla = listar_estado_tareas_grupo(id,0,'a')
+        estado_tarea_verde = listar_estado_tareas_grupo(id,0,'v')
+
+        porcentaje_estado_rojo = (len(estado_tarea_rojo)*100)/can_tareas_no_realizadas
+        porcentaje_estado_amarilla = (len(estado_tarea_amarilla)*100)/can_tareas_no_realizadas
+        porcentaje_estado_verde = (len(estado_tarea_verde)*100)/can_tareas_no_realizadas
+        porcentaje_estado_tareas.append(porcentaje_estado_rojo)
+        porcentaje_estado_tareas.append(porcentaje_estado_amarilla)
+        porcentaje_estado_tareas.append(porcentaje_estado_verde)
+    except:
+        pass
+
+    
+    print(tareas_grupo)
+    data = {
+        'grupo':grupo,
+        'tareas_grupo':tareas_grupo,
+        'tareas_no_realizada':tareas_no_realizada,
+        'can_tareas_grupo':can_tareas_grupo,
+        'can_tareas_no_realizadas':can_tareas_no_realizadas,
+        'tareas_realizada':tareas_realizada,
+        'can_tareas_realizadas':can_tareas_realizadas,
+        'usuarios_grupo':usuarios_grupo,
+        'porcentajes':porcentajes,
+        'porcentaje_estado_tareas':porcentaje_estado_tareas
+
+
+    }
+
+    return render(request,'process/estadisticas/estadistica_grupo.html', data)
+
+def listar_usuario_estadistica(request):
+    usuarios = models.User.objects.all()
+
+    data = {
+    'usuarios': usuarios,
+    }   
+
+
+    return render(request,'process/estadisticas/listar_usuario_estadistica.html', data)
+
+def estadisticas_usuario(request,id):
+    usuario = get_object_or_404(models.User, id=id)
+    tareas_usuarios = listar_tareas_usuario(id)
+    tareas_realizada = []
+    tareas_no_realizada = []
+    porcentajes = []
+    porcentaje_estado_tareas=[]
+    estado_tarea_rojo = []
+    estado_tarea_amarilla = []
+    estado_tarea_verde = []
+    for t in tareas_usuarios:
+        if t[2]==0:
+            tareas_no_realizada.append(t)
+        elif t[2] ==1:
+            tareas_realizada.append(t)
+    
+    ##Cantidad de tareas del usuario.
+    can_tareas_usuario = len(tareas_usuarios)
+    can_tareas_no_realizadas = len(tareas_no_realizada)
+    can_tareas_realizadas = len(tareas_realizada)
+
+    ##Porcentajes
+    try:
+        
+        porcentaje_tareas_no_realizada = (can_tareas_no_realizadas*100)/can_tareas_usuario
+        porcentaje_tareas_realizada = (can_tareas_realizadas*100)/can_tareas_usuario
+        porcentajes.append(porcentaje_tareas_realizada)
+        porcentajes.append(porcentaje_tareas_no_realizada)
+        
+        for t in tareas_no_realizada:
+            if t[6] == 'r':
+                estado_tarea_rojo.append(t)
+            elif t[6] == 'a':
+                estado_tarea_amarilla.append(t)
+            elif t[6] == 'v':
+                estado_tarea_verde.append(t)
+
+        porcentaje_estado_rojo = (len(estado_tarea_rojo)*100)/can_tareas_no_realizadas
+        porcentaje_estado_amarilla = (len(estado_tarea_amarilla)*100)/can_tareas_no_realizadas
+        porcentaje_estado_verde = (len(estado_tarea_verde)*100)/can_tareas_no_realizadas
+        porcentaje_estado_tareas.append(porcentaje_estado_rojo)
+        porcentaje_estado_tareas.append(porcentaje_estado_amarilla)
+        porcentaje_estado_tareas.append(porcentaje_estado_verde)
+    except:
+        pass
+    data = {
+        'usuario':usuario,
+        'can_tareas_usuario':can_tareas_usuario,
+        'can_tareas_no_realizadas':can_tareas_no_realizadas,
+        'can_tareas_realizadas':can_tareas_realizadas,
+        'tareas_no_realizada':tareas_no_realizada,
+        'tareas_realizada':tareas_realizada,
+        'porcentaje_estado_tareas':porcentaje_estado_tareas,
+        'porcentajes':porcentajes
+    }
+
+    return render(request,'process/estadisticas/estadistica_usuario.html', data)
+##Métodos de pl/sql
 def listar_tareas_departamento(id_departamento, realizado):
     django_cursor = connection.cursor()
     cursor = django_cursor.connection.cursor()
@@ -606,7 +784,6 @@ def listar_tareas_departamento(id_departamento, realizado):
         lista.append(l)
     
     return lista
-
 
 def listar_tareas_departamento_total(id_departamento):
     django_cursor = connection.cursor()
@@ -633,7 +810,7 @@ def listar_usuarios_departamento(id_departamento):
 
     return lista
 
-def listar_estado_tareas(id_departamento, realizado, estado):
+def listar_estado_tareas_departamento(id_departamento, realizado, estado):
     django_cursor = connection.cursor()
     cursor = django_cursor.connection.cursor()
     out_cur = django_cursor.connection.cursor()
@@ -644,4 +821,63 @@ def listar_estado_tareas(id_departamento, realizado, estado):
         lista.append(l)
 
     return lista
+
+def listar_grupos():
+    django_cursor = connection.cursor()
+    cursor = django_cursor.connection.cursor()
+    out_cur = django_cursor.connection.cursor()
+    cursor.callproc('SP_LISTAR_GRUPOS',[out_cur])
     
+    lista= []
+    for l in out_cur:
+        lista.append(l)
+
+    return lista
+
+def listar_tareas_grupo(id_grupo):
+    django_cursor = connection.cursor()
+    cursor = django_cursor.connection.cursor()
+    out_cur = django_cursor.connection.cursor()
+    cursor.callproc('SP_LISTAR_TAREAS_GRUPO',[id_grupo,out_cur])
+    
+    lista = []
+    for l in out_cur:
+        lista.append(l)
+    return lista
+
+def listar_usuarios_grupo(id_grupo):
+    django_cursor = connection.cursor()
+    cursor = django_cursor.connection.cursor()
+    out_cur = django_cursor.connection.cursor()
+    cursor.callproc('SP_LISTAR_USUARIOS_GRUPO',[id_grupo,out_cur])
+
+    lista = []
+    for l in out_cur:
+        lista.append(l)
+    return lista
+
+def listar_estado_tareas_grupo(id_grupo, realizado, estado):
+    django_cursor = connection.cursor()
+    cursor = django_cursor.connection.cursor()
+    out_cur = django_cursor.connection.cursor()
+    cursor.callproc('SP_LISTAR_ESTADO_TAREAS_GRUPO',[id_grupo,realizado,estado,out_cur])
+    
+    lista= []
+    for l in out_cur:
+        lista.append(l)
+
+    return lista
+
+def listar_tareas_usuario(id_usuario):
+    django_cursor = connection.cursor()
+    cursor = django_cursor.connection.cursor()
+    out_cur = django_cursor.connection.cursor()
+    cursor.callproc('SP_LISTAR_TAREAS_GRUPO',[id_usuario,out_cur])
+
+    lista = []
+
+    for l in out_cur:
+        lista.append(l)
+    
+    return lista
+    # SP_LISTAR_TAREAS_GRUPO

@@ -21,13 +21,19 @@
                     <form action="" method="POST">
                         {% csrf_token %}
                         {{ formSolucion | crispy }}
-                        <div class="d-flex justify-content-center">
-                            <a href="{% url 'listar_reportes_problemas'%}" class="btn btn-secondary">Cancelar</a>
-                            &nbsp;
-                            {% if reporte.estado == False %}
-                                <input type="submit" value="Enviar Respuesta" class="btn btn-primary">
-                            {% endif %}
+                        <div class="row justify-content-between">
+                            <div class="file-modificar col-xl-6 col-md-6 ">
+                                <a href="{% url 'listar_reportes_problemas'%}" class="btn btn-secondary">Cancelar</a>
+                            </div>
+                            <div class="file-modificar col-xl-6 col-md-6 ">
+                                {% if perms.process.add_respuestaproblema%}
+                                    {% if reporte.estado == False %}
+                                        <input type="submit" value="Enviar Respuesta" class="btn btn-primary">
+                                    {% endif %}
+                                {% endif %}
+                            </div>
                         </div>
+                        
                     </form>
                     {{mensaje}}
                 </div>

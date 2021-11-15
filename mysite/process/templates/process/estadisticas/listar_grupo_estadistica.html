@@ -3,31 +3,30 @@
 <div class="container col-12 col-md-6 offset-md-3">
     <div class="card">
         <div class="card-body">
-            <h2>Listado de usuarios.</h2>
+            <h2>Listado de grupos.</h2>
             <hr>
             <div class="table-responsive">
                 <table class="table table-striped table-hover table-responsive-sm">
                     <tr>
-                        <th>Nombre Usuario </th>
+                        <th>Id Grupo</th>
                         <th>Nombre</th>
-                        <th>Email</th>
+                        <th>Cant usuarios.</th>
                         <th></th>
                     </tr>
-                    {% for p in users %}
+                    {% for p in grupos %}
                     <tr>
-                        <td>{{ p.username | title }}</td>
-                        <td>{{ p.first_name }}</td>
-                        <td>{{ p.email }}</td>
-                        <!-- <td>{{ p.fechaCreacion | title }}</td> -->
+                        <td>{{ p.0 | title }}</td>
                         <td>
-    
-                            <a href="{% url 'modificar_usuario_admin' p.id%}" class="btn btn-primary">Abrir</a>
+                            {{ p.1 }}
+                        </td>
+                        <td>{{ p.2 }}</td>
+                        <td>
+                            <a href="{% url 'estadisticas_grupo' p.0%}" class="btn btn-success">Revisar estadisticas</a>
                         </td>
                     </tr>
                     {% endfor %}
                 </table>
             </div>
-            
         </div>
     </div>
     

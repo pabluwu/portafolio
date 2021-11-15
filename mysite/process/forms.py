@@ -8,29 +8,25 @@ from django.utils.translation import gettext_lazy as _
 from . import models
 
 class UserCreationForm(UserCreationForm):
+    groups = forms.ModelChoiceField(queryset=Group.objects.all())
     pass
-    """ password1 = forms.CharField(label='Contraseña', widget=forms.PasswordInput)
-    password2 = forms.CharField(
-        label='Confirmar contraseña', widget=forms.PasswordInput)
-     """
     class Meta:
         model = models.User
         fields=['username','first_name','last_name','email', 'departamento', 'groups']
+        labels = {
+            'username': _('Nombre de usuario'),
+            'first_name': _('Nombre'),
+            'last_name': _('Apellido'),
+            'groups': _('Grupo'),
+        }
+        widgets = {
+
+        }
 
 class RechazoForm(forms.ModelForm):
     class Meta:
         model = models.MotivoRechazo
         fields =['descripcion']
-
-# class SolicitudRechazoForm(forms.ModelForm):
-#     class Meta:
-#         model = models.MotivoRechazo
-#         fields = ['descripcion', 'usuario', 'tarea']
-#         widgets = {
-#             'descripcion' : forms.TextInput(attrs={'readonly':'readonly'}),
-#             'usuario': forms.TextInput(attrs={'readonly':'readonly'}),
-#             'tarea': forms.TextInput(attrs={'readonly':'readonly'}),
-#         }
 
 class RespuestaSolicitudForm(forms.ModelForm):
     class Meta:
@@ -91,11 +87,6 @@ class TareaCompletaForm(forms.ModelForm):
             'usuario': forms.TextInput(attrs={'readonly':'readonly'}),
         }
 
-class UserGroupForm(forms.ModelForm):
-    class Meta:
-        model = Group
-        fields = '__all__'
-
 class GroupForm(forms.Form):
 
 
@@ -122,7 +113,7 @@ class UsuarioFormulario(forms.Form):
     nombre = forms.CharField(max_length=50)
     apellido = forms.CharField(max_length=50)
     email = forms.CharField(max_length=50)
-    grupos = forms.ModelMultipleChoiceField(queryset=Group.objects.all(),widget=forms.CheckboxSelectMultiple)
+    grupos = forms.ModelChoiceField(queryset=Group.objects.all())
     departamento = forms.ModelChoiceField(queryset=models.Departamento.objects.all())
 
 
