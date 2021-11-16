@@ -121,7 +121,108 @@ def listar_tareas(request):
     }
     return render(request, 'process/tarea/listar_tarea.html', data)
 
-##Funciona que retorna las tareas en base al filtro del semáforo.
+@login_required()
+def listar_rechazos_tarea(request):
+    tareas_rechazadas = []
+    t = []
+    if request.user.has_perm('process._add_respuestarechazo'):
+        tareas_rechazadas = listar_tareas_rechazadas(0)
+        if request.POST.get('solicitudes_no_respondidas'):
+            tareas_rechazadas = listar_tareas_rechazadas(0)
+        elif request.POST.get('solicitudes_respondidas'):
+            tareas_rechazadas = listar_tareas_rechazadas(1)
+    else: 
+        user = request.user
+        if request.POST.get('solicitudes_no_respondidas'):
+            tareas = listar_tareas_rechazadas(0)
+            for t in tareas:
+                if t[3] == user.id:
+                    tareas_rechazadas.append(t)
+        elif request.POST.get('solicitudes_respondidas'):
+            tareas = listar_tareas_rechazadas(1)
+            for t in tareas:
+                if t[3] == user.id:
+                    tareas_rechazadas.append(t)
+                
+    data = {
+        'tareas_rechazadas':tareas_rechazadas ,
+        
+    }
+    return render(request, 'process/tarea/listar_rechazos_tarea.html', data)
+
+@login_required
+def revisar_rechazo_tarea(request, id, id_rechazo):
+    rechazo = models.MotivoRechazo()
+    respuestaRechazo = models.RespuestaRechazo()
+    tarea = get_object_or_404(models.Tarea, id=id)
+    data_form = {}
+    try:
+        rechazo = models.MotivoRechazo.objects.get(id=id_rechazo)
+        data_form={'descripcion':rechazo.descripcion,
+            'usuario':rechazo.usuario.username,
+            'tarea':rechazo.tarea.nombre}
+    except:
+        rechazo = None
+    data_form_tarea = forms.TareaRechazoForm()
+    data_form_tarea={
+        'nombre':tarea.nombre,
+        'descripcion':tarea.descripcion,
+        'fecha_limite':tarea.fechaLimite,
+        'usuario_rechazo':'pepito',
+    }
+        
+    try:
+        respuestaRechazo = models.RespuestaRechazo.objects.get(motivoRechazo=rechazo)
+    except respuestaRechazo.DoesNotExist:
+        respuestaRechazo = None
+        print('no hay respuesta')
+
+    if request.POST.get("form_type") == 'solicitudform':
+        formRespustaRechazo = forms.RespuestaSolicitudForm(data=request.POST, files=request.FILES)
+        respuestaRechazo = models.RespuestaRechazo()
+        if formRespustaRechazo.is_valid():
+            respuestaRechazo.respuesta=formRespustaRechazo['respuesta'].value()
+            if request.POST.get('rechazarSolicitud'):
+                respuestaRechazo.aceptado=False
+                tarea.usuario = rechazo.usuario
+                tarea.save()
+            elif request.POST.get('aceptarSolicitud'):
+                respuestaRechazo.aceptado=True
+                tarea.usuario = None
+                tarea.save()
+            respuestaRechazo.motivoRechazo = rechazo
+            respuestaRechazo.save()
+            rechazo.respondido = True
+            rechazo.save()
+            return redirect(to="listar_rechazos_tarea")
+                
+    data = {
+        'form': forms.TareaRechazoForm(data_form_tarea),
+        'formRechazo': forms.RechazoForm(),
+        'formSolicitudRechazo': forms.SolicitudRechazoForm(data_form),
+        'formRespuesta': forms.RespuestaSolicitudForm(),
+        'formRespuestaSolicitud': forms.RespuestaSolicitudRespondidaForm(instance=respuestaRechazo),
+        'rechazo': rechazo,
+        'respuestaRechazo': respuestaRechazo,
+    }
+    return render(request, 'process/tarea/revisar_rechazo_tarea.html', data)
+
+#Procedimiento pl/sql tareas rechazadas.
+def listar_tareas_rechazadas(rechazo_respondido):
+    django_cursor = connection.cursor()
+    cursor = django_cursor.connection.cursor()
+    out_cur = django_cursor.connection.cursor()
+    cursor.callproc('SP_LISTAR_TAREAS_RECHAZADAS',[rechazo_respondido,out_cur])
+
+    lista = []
+
+    for l in out_cur:
+        lista.append(l)
+    
+    return lista
+
+
+##Funcion que retorna las tareas en base al filtro del semáforo.
 def filtroSemaforo(estado, user):
     tarea1 = models.Tarea()
     semaforos1 = models.Semaforo.objects.filter(estadoSemaforo=estado)
@@ -149,10 +250,10 @@ def filtroSemaforo(estado, user):
 @login_required()
 def listar_tareas_completadas(request):
     if request.user.is_superuser:
-        tareas = models.Tarea.objects.filter(realizado = True)
+        tareas = listar_tareas_bd(1,1,1)
     else:
         user = request.user
-        tareas = models.Tarea.objects.filter(usuario = user, realizado = True)                                        
+        tareas = listar_tareas_bd(1,0,user.id)
 
     data = {
         'tareas':tareas
@@ -161,16 +262,52 @@ def listar_tareas_completadas(request):
 
 @login_required()
 def tarea_completada(request, id):
-    tarea = get_object_or_404(models.Tarea, id=id)
-
-    data={
-        'form': forms.TareaCompletaForm(instance=tarea)
+    data_form = forms.TareaCompletaForm()
+    tarea = detalle_tarea_bd(id)
+    for t in tarea:
+        data_form = {
+            'nombre':t[1],
+            'descripcion':t[2],
+            'realizado':t[3],
+            'fecha_limite':t[4],
+            'fecha_termino':t[5],
+            'usuario':t[7]
+        }
+    print(tarea)
+    data = {
+        'form':forms.TareaCompletaForm(data_form),
     }
 
     if request.method == 'POST':
         return redirect(to="listar_tareas_completadas")
 
     return render(request,'process/tarea/ver_tarea.html', data)
+
+def listar_tareas_bd(estado_tarea,is_superuser,usuario_id):
+    django_cursor = connection.cursor()
+    cursor = django_cursor.connection.cursor()
+    out_cur = django_cursor.connection.cursor()
+    cursor.callproc('SP_LISTAR_TAREAS',[estado_tarea,is_superuser,usuario_id,out_cur])
+
+    lista = []
+
+    for l in out_cur:
+        lista.append(l)
+    
+    return lista
+
+def detalle_tarea_bd(tarea_id):
+    django_cursor = connection.cursor()
+    cursor = django_cursor.connection.cursor()
+    out_cur = django_cursor.connection.cursor()
+    cursor.callproc('SP_DETALLE_TAREA',[tarea_id,out_cur])
+
+    lista = []
+
+    for l in out_cur:
+        lista.append(l)
+    
+    return lista
 
 @login_required()
 def modificar_tarea(request, id):
@@ -241,11 +378,7 @@ def modificar_tarea(request, id):
         if request.POST.get("problema") == 'reportar_problema':
             
             request.session['id_tarea'] = tarea.id
-            return redirect(to="reportar_problema")
-            
-
-
-                
+            return redirect(to="reportar_problema")  
                 
         if request.POST.get("form_type") == 'solicitudform':
             formRespustaRechazo = forms.RespuestaSolicitudForm(data=request.POST, files=request.FILES)
@@ -461,6 +594,7 @@ def reportar_problema(request):
                 data["form"] = formulario
     return render(request,'process/problemas/registrar_problema.html', data)
 
+@login_required
 def listar_problemas(request):
     # if request.user.has_perm('process.add_respuestaproblema'):
     reportes = []
@@ -484,7 +618,7 @@ def listar_problemas(request):
     }   
     return render(request, 'process/problemas/listar_problemas.html', data)
     
-
+@login_required
 def responder_problema(request, id):
     reporte = models.ReportarProblema.objects.get(id=id)
     try:
@@ -519,6 +653,7 @@ def responder_problema(request, id):
 
 
 ##Gestión de departamentos.
+@login_required
 def agregar_departamento(request):
     if request.user.has_perm('process.add_departamento'):
         data = {
@@ -536,6 +671,7 @@ def agregar_departamento(request):
     else:
         return render(request,'process/error_permiso.html')
 
+@login_required
 def listar_departamento(request):
     departamentos = models.Departamento.objects.all()
     for d in departamentos:
@@ -551,6 +687,7 @@ def listar_departamento(request):
 
     return render(request,'process/departamento/listar_departamento.html', data)
 
+@login_required
 def modificar_departamento(request,id):
     
     departamento = get_object_or_404(models.Departamento, id=id)
@@ -566,6 +703,8 @@ def modificar_departamento(request,id):
         data["form"] = formulario
     return render(request,'process/departamento/modificar_departamento.html', data)
 
+##Estadisticas
+@login_required
 def estadisticas_departamento(request, id):
     departamento = get_object_or_404(models.Departamento, id=id)
     porcentajes=[]
@@ -624,6 +763,7 @@ def estadisticas_departamento(request, id):
     }
     return render(request,'process/estadisticas/estadistica_departamento.html', data)
 
+@login_required
 def listar_departamento_estadistica(request):
     departamentos = models.Departamento.objects.all()
     for d in departamentos:
@@ -638,6 +778,7 @@ def listar_departamento_estadistica(request):
 
     return render(request,'process/estadisticas/listar_departamento_estadisticas.html', data)
 
+@login_required
 def listar_grupo_estadistica(request):
     grupos = listar_grupos()
 
@@ -648,14 +789,16 @@ def listar_grupo_estadistica(request):
 
     return render(request,'process/estadisticas/listar_grupo_estadistica.html', data)
 
+@login_required
 def estadisticas_grupo(request,id):
     grupo = get_object_or_404(Group, id=id)
     tareas_no_realizada = []
     tareas_realizada = []
     porcentajes = []
     porcentaje_estado_tareas=[]
-
+    print(id)
     tareas_grupo = listar_tareas_grupo(id)
+    print(tareas_grupo)
     for t in tareas_grupo:
         if t[2] == 0:
             tareas_no_realizada.append(t)
@@ -666,6 +809,7 @@ def estadisticas_grupo(request,id):
     can_tareas_realizadas = len(tareas_realizada)
 
     usuarios_grupo = listar_usuarios_grupo(id)
+    print(usuarios_grupo)
     try:
         ##Porcentajes
         porcentaje_tareas_no_realizada = (can_tareas_no_realizadas*100)/can_tareas_grupo
@@ -688,7 +832,6 @@ def estadisticas_grupo(request,id):
         pass
 
     
-    print(tareas_grupo)
     data = {
         'grupo':grupo,
         'tareas_grupo':tareas_grupo,
@@ -706,6 +849,7 @@ def estadisticas_grupo(request,id):
 
     return render(request,'process/estadisticas/estadistica_grupo.html', data)
 
+@login_required
 def listar_usuario_estadistica(request):
     usuarios = models.User.objects.all()
 
@@ -716,6 +860,7 @@ def listar_usuario_estadistica(request):
 
     return render(request,'process/estadisticas/listar_usuario_estadistica.html', data)
 
+@login_required
 def estadisticas_usuario(request,id):
     usuario = get_object_or_404(models.User, id=id)
     tareas_usuarios = listar_tareas_usuario(id)
@@ -874,7 +1019,7 @@ def listar_tareas_usuario(id_usuario):
     django_cursor = connection.cursor()
     cursor = django_cursor.connection.cursor()
     out_cur = django_cursor.connection.cursor()
-    cursor.callproc('SP_LISTAR_TAREAS_GRUPO',[id_usuario,out_cur])
+    cursor.callproc('SP_LISTAR_TAREAS_USUARIO',[id_usuario,out_cur])
 
     lista = []
 
@@ -883,3 +1028,6 @@ def listar_tareas_usuario(id_usuario):
     
     return lista
     # SP_LISTAR_TAREAS_GRUPO
+
+def perfil_usuario(request):
+    return render(request, 'registration/perfil_usuario.html')

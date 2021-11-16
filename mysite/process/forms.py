@@ -54,11 +54,6 @@ class SolicitudRechazoForm(forms.Form):
     descripcion.widget.attrs['readonly'] = True
     usuario.widget.attrs['readonly'] = True
     tarea.widget.attrs['readonly'] = True
-    widgets = {
-        'descripcion' : forms.TextInput(attrs={'readonly':'readonly'}),
-        'usuario': forms.TextInput(attrs={'readonly':'readonly'}),
-        'tarea': forms.TextInput(attrs={'readonly':'readonly'}),
-    }
 
 
 class FlujoTareaForm(forms.ModelForm):
@@ -73,19 +68,34 @@ class TareaForm(forms.ModelForm):
         model = models.Tarea
         fields = ['nombre', 'descripcion', 'fechaLimite', 'usuario']
 
-class TareaCompletaForm(forms.ModelForm):
-    class Meta:
-        model = models.Tarea
-        fields = '__all__'
-        widgets = {
-            'nombre': forms.TextInput(attrs={'readonly':'readonly'}),
-            'descripcion': forms.TextInput(attrs={'readonly':'readonly'}),
-            'realizado': forms.CheckboxInput(attrs={'disabled':'disabled'}),
-            'fechaCreacion': forms.DateInput(attrs={'readonly':'readonly'}),
-            'fechaLimite': forms.DateInput(attrs={'readonly':'readonly'}),
-            'fechaTermino': forms.DateInput(attrs={'readonly':'readonly'}),
-            'usuario': forms.TextInput(attrs={'readonly':'readonly'}),
-        }
+class TareaCompletaForm(forms.Form):
+    
+        nombre = forms.CharField(max_length=50)
+        descripcion = forms.CharField(max_length=50)
+        realizado = forms.BooleanField()
+        fecha_limite = forms.DateField()
+        fecha_termino = forms.DateField()
+        usuario = forms.CharField(max_length=50)
+
+        nombre.widget.attrs['readonly'] = True
+        descripcion.widget.attrs['readonly'] = True
+        realizado.widget.attrs['readonly'] = True
+        fecha_limite.widget.attrs['readonly'] = True
+        fecha_termino.widget.attrs['readonly'] = True
+        usuario.widget.attrs['readonly'] = True
+
+class TareaRechazoForm(forms.Form):
+    
+        nombre = forms.CharField(max_length=50)
+        descripcion = forms.CharField(max_length=50)
+        fecha_limite = forms.DateField()
+        usuario_rechazo = forms.CharField(max_length=50)
+        
+        nombre.widget.attrs['readonly'] = True
+        descripcion.widget.attrs['readonly'] = True        
+        fecha_limite.widget.attrs['readonly'] = True        
+        usuario_rechazo.widget.attrs['readonly'] = True
+
 
 class GroupForm(forms.Form):
 
@@ -100,6 +110,7 @@ class GroupForm(forms.Form):
     ('add_respuestaproblema','Responder Reportes'),
     ('add_departamento', 'Agregar Departamento'),
     ('change_departamento','Modificar Departamento'),
+    ('view_estadistica', 'Revisar Estadisticas'),
 ]
     nombre = forms.CharField(max_length=50)
     permisos = forms.MultipleChoiceField(

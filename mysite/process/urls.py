@@ -10,6 +10,9 @@ urlpatterns=[
     path('modificar/flujo_tarea/<id>', views.modificar_flujo_tarea, name="modificar_flujo_tarea"),
     path('agregar/tarea', views.agregar_tarea, name="agregar_tarea"),
     path('listar/tarea', views.listar_tareas, name="listar_tareas"),
+    path('listar/rechazos_tarea', views.listar_rechazos_tarea, name="listar_rechazos_tarea"),
+    path('revisar_rechazo/<id>/<id_rechazo>', views.revisar_rechazo_tarea, name="revisar_rechazo_tarea"),
+    # url(r'^viewspecs/itemdetails/(?P<param1>[\w-]+)/(?P<param2>[\w-]+)/$', views.specsView),
     path('listar/tarea_completada', views.listar_tareas_completadas, name="listar_tareas_completadas"),
     path('modificar/tarea/<id>', views.modificar_tarea, name="modificar_tarea"),
     path('ver/tarea/<id>', views.tarea_completada, name="tarea_completada"),
@@ -29,6 +32,7 @@ urlpatterns=[
     path('estadisticas/grupo/<id>', views.estadisticas_grupo, name="estadisticas_grupo"),
     path('estadisticas/listar/usuarios', views.listar_usuario_estadistica, name="listar_usuario_estadistica"),
     path('estadisticas/usuario/<id>', views.estadisticas_usuario, name="estadisticas_usuario"),
+    path('perfil', views.perfil_usuario, name="perfil_usuario"),
 
     
 ]

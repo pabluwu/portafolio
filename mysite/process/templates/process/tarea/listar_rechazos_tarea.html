@@ -1,0 +1,78 @@
+{% extends 'process/base.html'%}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="container col-12 col-md-6 offset-md-3">
+    <div class="card">
+        <div class="card-body">
+            <h2>Listado de solicitudes de rechazo de tareas.</h2>
+            <hr>
+            <div class="card-body">                
+                <form action="" method="POST">
+                    {% csrf_token %}
+                    <input class="btn btn-success" type="submit" name="solicitudes_respondidas" value="Solicitudes respondidas">
+                    &nbsp;
+                    <input class="btn btn-danger" type="submit" name="solicitudes_no_respondidas" value="Solicitudes sin responder">
+                </form>
+            </div>
+            <div class="table-responsive">
+                
+                <table class="table table-striped table-hover table-responsive-sm">
+                    <tr>
+                        <th>Id solicitud</th>
+                        <th>Id tarea</th>
+                        <th>Nombre </th>
+                        <th>Usuario solicitud</th>                        
+                        <th>Respondida</th> 
+                        <th>Semáforo</th>
+                        <th></th>
+                    </tr>
+                    {% for p in tareas_rechazadas %}
+                        <tr>
+                            
+                            <td>{{ p.0 | title }}</td>
+                            <td>{{ p.1 | title }}</td>
+                            <td>{{ p.2 }}</td>
+                            <td>{{ p.4 }}</td>
+                            <td>
+                                {% if p.6 == 0 %}
+                                    No
+                                {% else %}
+                                    Si
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if p.7 == 'v' %}
+                                    <input id="semaforoVerde" class="dot verde" type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" name="verAvance" id="">
+                                {% elif p.7 == 'a' %}
+                                    <input id="semaforoAmarillo" class="dot amarillo" type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" name="verAvance" id="">    
+                                {% elif p.7 == 'r' %}
+                                    <input id="semaforoRojo" class="dot rojo" type="button" data-bs-toggle="modal" data-bs-target="#exampleModal" name="verAvance" id="">    
+                                {% endif %}  
+                            </td>                            
+                            <td>
+                                <a href="{% url 'revisar_rechazo_tarea' p.1 p.0%}" class="btn btn-primary">Abrir</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            
+        </div>
+    </div>
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Gestión solicitud tarea</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    
+                </div>
+                
+            </div>
+        </div>
+    </div>
+    
+</div>
+{% endblock %}

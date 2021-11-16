@@ -3,3 +3,4 @@ django-crispy-forms
 crispy-bootstrap5
 cx_Oracle
 django-filter
+xhtml2pdf

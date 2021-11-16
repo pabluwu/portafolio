@@ -158,3 +158,67 @@ begin
                     order by pt.realizado ;
 
 end;
+
+create or replace procedure sp_listar_tareas_rechazadas(
+    v_rechazo_respondido number,
+    grupos out SYS_REFCURSOR
+)
+is
+
+begin
+
+    open grupos for select pt.id, pt.nombre, pr.usuario_id, pu.username, pr.id, pr.respondido, ps.estadosemaforo from process_tarea pt
+                    full join process_motivorechazo pr on pr.tarea_id = pt.id 
+                    full join process_user pu on pu.id = pr.usuario_id  
+                    join process_calculoestado pc on pc.id = pt.id
+                    join process_semaforo ps on ps.calculoestado_id = pc.id
+                    where pr.respondido = v_rechazo_respondido;
+
+end;
+
+
+create or replace procedure sp_listar_tareas(
+    v_estado_tarea number,
+    v_is_super_user number,
+    v_user_id number,
+    grupos out SYS_REFCURSOR
+)
+is
+
+begin
+    if v_is_super_user = 1 then
+        open grupos for select pt.id, pt.nombre, pt.descripcion, pt.realizado, pt.fechalimite, pt.fechatermino, pu.id, pu.username, ps.estadosemaforo from process_tarea pt
+                                join process_user pu on pu.id = pt.usuario_id
+                                join process_calculoestado pc on pc.id = pt.id
+                                join process_semaforo ps on ps.calculoestado_id = pc.id
+                                where pt.realizado = v_estado_tarea
+                                order by pu.username;
+    elsif v_is_super_user = 0 then
+         open grupos for select pt.id, pt.nombre, pt.descripcion, pt.realizado, pt.fechalimite, pt.fechatermino, pu.id, pu.username, ps.estadosemaforo from process_tarea pt
+                                join process_user pu on pu.id = pt.usuario_id
+                                join process_calculoestado pc on pc.id = pt.id
+                                join process_semaforo ps on ps.calculoestado_id = pc.id
+                                where pt.realizado = v_estado_tarea and pt.usuario_id = v_user_id
+                                order by pu.username;
+    end if;
+end;
+
+create or replace procedure sp_listar_tareas(
+    v_id_tarea number,
+    grupos out SYS_REFCURSOR
+)
+is
+
+begin
+     open grupos for select pt.id, pt.nombre, pt.descripcion, pt.realizado, pt.fechalimite, pt.fechatermino, pu.id, pu.username, ps.estadosemaforo from process_tarea pt
+                        join process_user pu on pu.id = pt.usuario_id
+                        join process_calculoestado pc on pc.id = pt.id
+                        join process_semaforo ps on ps.calculoestado_id = pc.id
+                        where pt.id = v_id_tarea;
+
+end;
+
+
+
+
+

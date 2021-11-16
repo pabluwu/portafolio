@@ -9,46 +9,13 @@
         <div class="col-12 col-md-6 offset-md-3">
             <div class="card">
                 <div class="card-body">
-                    <h3>Estado de tarea</h3>
-                    <div class="d-flex flex-row align-items-center">
-                        <div class="col-4 d-flex justify-content-center ">
-                            <div class="containerSemaforo">
-                                {% if semaforo.estadoSemaforo == 'v' %}
-                                    <div class="circle " color="red"></div>
-                                    <div class="circle " color="yellow"></div>
-                                    <div class="circle green" color="green"></div>
-                                {% elif semaforo.estadoSemaforo == 'a' %}
-                                    <div class="circle " color="red"></div>
-                                    <div class="circle yellow" color="yellow"></div>
-                                    <div class="circle " color="green"></div>
-                                {% else %}
-                                    <div class="circle red" color="red"></div>
-                                    <div class="circle " color="yellow"></div>
-                                    <div class="circle " color="green"></div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-8">
-                            {% if calculoEstado.diasRestantes.days > 0 %}
-                            <p class="h6">A esta tarea actualmente le quedan {{calculoEstado.diasRestantes.days}} día(s) para ser completada.</p>
-                            {% else %}
-                            <p class="h6">Esta tarea está atrasada por {{calculoEstado.diasRestantes.days}} día(s)</p>
-                            {% endif %}
-                            
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <hr>
-            <div class="card">
-                <div class="card-body">
 
-                    <h2>Editar una tarea.</h2>
+                    <h2>Revisar rechazo de la tarea.</h2>
                     <form action="" method="POST">
                         {% csrf_token %}
                         <input type="hidden" value="reportar_problema" name="problema" class="btn btn-danger">
                         <input type=button class="btn btn-info" value="Volver Atrás" onClick="javascript:history.go(-1);">
-                        <input type="submit" value="Reportar Problema" name="" class="btn btn-danger">
+                        
                         
                     </form>
                     
@@ -74,19 +41,9 @@
                                     {% endif %}
                                 
                             </div>
-                            <div class="file-modificar col-xl-6 col-md-6 ">
-                                <input type="submit" value="Terminar tarea" class="btn btn-primary" name="terminar">
-                            
-                            </div>
-                            <div class="file-modificar col-xl-6 col-md-6 ">
-                                {% if perms.process.change_tarea %}
-                                <input type="submit" value="Editar" class="btn btn-primary">
-                                {% endif %}                            
-                            
-                            </div>
                             <div class="file-modificar col-xl-6 col-md-6 ">                                
 
-                                <a href="{% url 'listar_tareas'%}" class="btn btn-secondary">Cancelar</a>
+                                <a href="{% url 'listar_rechazos_tarea'%}" class="btn btn-secondary">Cancelar</a>
                             
                             </div>
                             
