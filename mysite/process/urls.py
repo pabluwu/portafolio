@@ -26,13 +26,20 @@ urlpatterns=[
     path('agregar/departamento', views.agregar_departamento, name="agregar_departamento"),
     path('listar/departamentos', views.listar_departamento, name="listar_departamentos"),
     path('modificar/departamento/<id>', views.modificar_departamento, name="modificar_departamento"),
+
     path('estadisticas/departamento/<id>', views.estadisticas_departamento, name="estadistica_departamento"),
     path('estadisticas/listar/departamentos', views.listar_departamento_estadistica, name="listar_departamentos_estadisticas"),
     path('estadisticas/listar/grupos', views.listar_grupo_estadistica, name="listar_grupo_estadistica"),
     path('estadisticas/grupo/<id>', views.estadisticas_grupo, name="estadisticas_grupo"),
     path('estadisticas/listar/usuarios', views.listar_usuario_estadistica, name="listar_usuario_estadistica"),
     path('estadisticas/usuario/<id>', views.estadisticas_usuario, name="estadisticas_usuario"),
+    path('estadistica/general', views.estadistica_general, name="estadistica_general"),
+
     path('perfil', views.perfil_usuario, name="perfil_usuario"),
+
+    path('reporte_estadistica_departamento/<id>',views.reporte_estadistica_departamento, name="reporte_estadistica_departamento"),
+    path('reporte_estadistica_grupo/<id>',views.reporte_estadistica_grupo, name="reporte_estadistica_grupo"),
+    
 
     
 ]

@@ -6,6 +6,9 @@
 <script src="https://code.highcharts.com/modules/exporting.js"></script>
 <script src="https://code.highcharts.com/modules/export-data.js"></script>
 <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"
+			  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+			  crossorigin="anonymous"></script>
 
 <div class="container">
     <br>
@@ -16,10 +19,12 @@
                 <div class="card-body">
                     <div class="row">
                         <input type=button class="btn btn-info col-xl-2" value="Volver Atrás" onClick="javascript:history.go(-1);">
+                        &nbsp;
+                        <a class="btn btn-success col-xl-2" href="{% url 'reporte_estadistica_departamento' departamento.id %}">Imprimir Reporte</a>
                         <hr>
                         <h2>Estadisticas departamento {{departamento.nombre}}.</h2>
                         <hr>
-                        <div class="card col-xl-4">
+                        <div class="card col-xl-12">
                             <div class="card-body ">
                                 <h5>Tareas Asignadas a este departamento: {{can_tareas_depto}} </h5>
                                 <hr>
@@ -29,15 +34,15 @@
                             </div>
                         </div>
                         
-                        <div class="card col-xl-4">
+                        <div class="card col-xl-6">
                             <div class="card-body">
-                                <div id="containerGrafico"></div>
+                                <img id="chart" class="col-xl-4" style="width: 100%; height: auto;"/>
                             </div>
                         </div>
                         
-                        <div class="card col-xl-4">
+                        <div class="card col-xl-6">
                              <div class="card-body">
-                                <div id="containerGrafico2"></div>
+                                <img id="chart2" style="width: 100%; height: auto;"/>
                             </div>
                         </div>
                         <div class="card col-xl-6">
@@ -128,95 +133,137 @@
 
 
 <script type="application/javascript">
-    Highcharts.chart('containerGrafico', {
-    chart: {
-        plotBackgroundColor: null,
-        plotBorderWidth: null,
-        plotShadow: false,
-        type: 'pie'
-    },
-    title: {
-        text: 'Gráfico de tareas realizadas/no realizadas.'
-    },
-    tooltip: {
-        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
-    },
-    accessibility: {
-        point: {
-            valueSuffix: '%'
-        }
-    },
-    plotOptions: {
-        pie: {
-            allowPointSelect: true,
-            cursor: 'pointer',
-            dataLabels: {
-                enabled: true,
-                format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+    var options = {
+        chart: {
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false,
+            type: 'pie'
+        },
+        title: {
+            text: 'Gráfico de tareas realizadas/no realizadas.'
+        },
+        tooltip: {
+            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+        },
+        accessibility: {
+            point: {
+                valueSuffix: '%'
             }
-        }
-    },
-    series: [{
-        name: 'Brands',
-        colorByPoint: true,
-        data: [{
-            name: 'Tareas Realizadas',
-            y: {{ porcentajes.0 }}
-        }, {
-            name: 'Tareas sin realizar',
-            y: {{ porcentajes.1 }}
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                    enabled: true,
+                    format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+                }
+            }
+        },
+        series: [{
+            name: 'Brands',
+            colorByPoint: true,
+            data: [{
+                name: 'Tareas Realizadas',
+                y: {{ porcentajes.0 }}
+            }, {
+                name: 'Tareas sin realizar',
+                y: {{ porcentajes.1 }}
+            }]
         }]
-    }]
-});
+    };
+
+
+    // URL to Highcharts export server
+    var exportUrl = 'https://export.highcharts.com/';
+
+    // POST parameter for Highcharts export server
+    var object = {
+        options: JSON.stringify(options),
+        type: 'image/png',
+        async: true
+    };
+
+    // Ajax request
+    $.ajax({
+        type: 'post',
+        url: exportUrl,
+        data: object,
+        success: function (data) {
+            // Update "src" attribute with received image URL
+            $('#chart').attr('src', exportUrl + data);
+        }
+    });
 </script>
 
 <script type="application/javascript">
-    Highcharts.setOptions({
-     colors: ['#c11111 ', ' #fcff41', '#4fe158']
-    });
-    Highcharts.chart('containerGrafico2', {
-    chart: {
-        plotBackgroundColor: null,
-        plotBorderWidth: null,
-        plotShadow: false,
-        type: 'pie'
-    },
-    title: {
-        text: 'Estado de tareas por realizar.'
-    },
-    tooltip: {
-        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
-    },
-    accessibility: {
-        point: {
-            valueSuffix: '%'
-        }
-    },
-    plotOptions: {
-        pie: {
-            allowPointSelect: true,
-            cursor: 'pointer',
-            dataLabels: {
-                enabled: true,
-                format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+    var options = {
+        colors: ['#c11111 ', ' #fcff41', '#4fe158'],
+        chart: {
+            plotBackgroundColor: null,
+            plotBorderWidth: null,
+            plotShadow: false,
+            type: 'pie'
+        },
+        title: {
+            text: 'Estado de tareas por realizar.'
+        },
+        tooltip: {
+            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+        },
+        accessibility: {
+            point: {
+                valueSuffix: '%'
             }
-        }
-    },
-    series: [{
-        name: 'Brands',
-        colorByPoint: true,
-        data: [{
-            name: 'Tareas en rojo',
-            y: {{ porcentaje_estado_tareas.0 }}
-        }, {
-            name: 'Tareas en amarillo',
-            y: {{ porcentaje_estado_tareas.1 }}
-        },{
-            name: 'Tareas en verde',
-            y: {{ porcentaje_estado_tareas.2 }}
+        },
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                    enabled: true,
+                    format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+                }
+            }
+        },
+        series: [{
+            name: 'Brands',
+            colorByPoint: true,
+            data: [{
+                name: 'Tareas en rojo',
+                y: {{ porcentaje_estado_tareas.0 }}
+            }, {
+                name: 'Tareas en amarillo',
+                y: {{ porcentaje_estado_tareas.1 }}
+            },{
+                name: 'Tareas en verde',
+                y: {{ porcentaje_estado_tareas.2 }}
+            }]
         }]
-    }]
-});
+    };
+
+
+    // URL to Highcharts export server
+    var exportUrl = 'https://export.highcharts.com/';
+
+    // POST parameter for Highcharts export server
+    var object = {
+        options: JSON.stringify(options),
+        type: 'image/png',
+        async: true
+    };
+
+    // Ajax request
+    $.ajax({
+        type: 'post',
+        url: exportUrl,
+        data: object,
+        success: function (data) {
+            // Update "src" attribute with received image URL
+            $('#chart2').attr('src', exportUrl + data);
+        }
+    });
 </script>
 
 

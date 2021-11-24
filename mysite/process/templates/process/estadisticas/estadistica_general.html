@@ -1,0 +1,504 @@
+{% extends 'process/base.html'%}
+{% load crispy_forms_tags %}
+{% load static %}
+{% block content %}
+
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+    
+    
+
+<div class="container">
+    <br>
+                    <br>
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <input type=button class="btn btn-info col-xl-2" value="Volver Atrás" onClick="javascript:history.go(-1);">
+                        &nbsp;
+                        
+                        
+                        <hr>
+                        <h2>Estadisticas Generales.</h2>
+                        <hr>
+                        <div class="card col-xl-4">
+                            <div class="card-body ">
+                                <h5>Tareas Totales: {{cant_tareas_totales}} </h5>
+                                <hr>
+                                <h5>Tareas Totales Asignadas: {{cant_tareas_totales_asignadas}} </h5>
+                                
+                                <h5>Tareas Sin Asignar: {{cant_tareas_sin_asignar}} </h5>
+                                <hr>
+                                <h5>Tareas No realizadas: {{cant_tareas_sin_realizar}} </h5>
+                                
+                                <h5>Tareas Realizadas: {{cant_tareas_realizadas}} </h5>
+                            </div>
+                        </div>
+                        
+                        <div class="card col-xl-4">
+                            <div class="card-body">
+                                <div id="containerGrafico"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="card col-xl-4">
+                             <div class="card-body">
+                                <div id="containerGrafico2"></div>
+                            </div>
+                        </div>
+                        <hr>
+                        <h2>Estadisticas Generales Departamentos.</h2>
+                        <hr>
+                        <div class="card col-xl-4">
+                            <div class="card-body ">
+                                <h5>Tareas asignadas por departamento:</h5>
+                                <hr>
+                                {% for p in porcentajes_depto %}
+                                
+                                <h5><a href="{% url 'estadistica_departamento' p.3 %}"
+                                    class="text-success text-decoration-none">{{p.1}}</a>: {{ p.2 }} tareas.</h5>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="card col-xl-4">
+                            <div class="card-body">
+                                <div id="containerGrafico3"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="card col-xl-4">
+                             <div class="card-body">
+                                <div id="containerGrafico4"></div>
+                            </div>
+                        </div>
+                        <h2>Estadisticas Generales Grupos.</h2>
+                        <hr>
+                        <div class="card col-xl-4">
+                            <div class="card-body ">
+                                <h5>Tareas asignadas por grupo:</h5>
+                                <hr>
+                                {% for p in porcentajes_grupo %}
+                                <h5><a href="{% url 'estadisticas_grupo' p.3 %}"
+                                    class="text-success text-decoration-none">{{p.1}}</a>: {{ p.2 }} tareas.</h5>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="card col-xl-4">
+                            <div class="card-body">
+                                <div id="containerGrafico5"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="card col-xl-4">
+                             <div class="card-body">
+                                <div id="containerGrafico6"></div>
+                            </div>
+                        </div>
+                        <h2>Estadisticas Generales Usuarios.</h2>
+                        <hr>
+                        <div class="card col-xl-4">
+                            <div class="card-body ">
+                                <h5>Tareas asignadas por grupo:</h5>
+                                <hr>
+                                {% for p in porcentajes_usuario %}
+                                <h5><a href="{% url 'estadisticas_usuario' p.3 %}"
+                                    class="text-success text-decoration-none">{{p.1}}</a>: {{ p.2 }} tareas.</h5>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="card col-xl-4">
+                            <div class="card-body">
+                                <div id="containerGrafico7"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="card col-xl-4">
+                             <div class="card-body">
+                                <div id="containerGrafico8"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+
+<script type="application/javascript">
+    Highcharts.chart('containerGrafico', {
+    chart: {
+        plotBackgroundColor: null,
+        plotBorderWidth: null,
+        plotShadow: false,
+        type: 'pie'
+    },
+    title: {
+        text: 'Gráfico de tareas realizadas/no realizadas.'
+    },
+    tooltip: {
+        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+    },
+    accessibility: {
+        point: {
+            valueSuffix: '%'
+        }
+    },
+    plotOptions: {
+        pie: {
+            allowPointSelect: true,
+            cursor: 'pointer',
+            dataLabels: {
+                enabled: true,
+                format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+            }
+        }
+    },
+    series: [{
+        name: 'Brands',
+        colorByPoint: true,
+        data: [{
+            name: 'Tareas Realizadas',
+            y: {{ porcentajes.0 }}
+        }, {
+            name: 'Tareas sin realizar',
+            y: {{ porcentajes.1 }}
+        }]
+    }]
+});
+</script>
+
+<script type="application/javascript">
+    Highcharts.setOptions({
+     
+    });
+    Highcharts.chart('containerGrafico2', {
+    chart: {
+        plotBackgroundColor: null,
+        plotBorderWidth: null,
+        plotShadow: false,
+        type: 'pie'
+    },
+    title: {
+        text: 'Gráfico de tareas asignadas'
+    },
+    tooltip: {
+        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+    },
+    accessibility: {
+        point: {
+            valueSuffix: '%'
+        }
+    },
+    plotOptions: {
+        pie: {
+            allowPointSelect: true,
+            cursor: 'pointer',
+            dataLabels: {
+                enabled: true,
+                format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+            }
+        }
+    },
+    series: [{
+        name: 'Brands',
+        colorByPoint: true,
+        data: [{
+            name: 'Tareas asignadas',
+            y: {{ porcentajes.2 }}
+        }, {
+            name: 'Tareas sin asignar',
+            y: {{ porcentajes.3 }}
+        }]
+    }]
+});
+</script>
+<script type="application/javascript">
+    Highcharts.setOptions({
+     
+    });
+    Highcharts.chart('containerGrafico3', {
+    chart: {
+        plotBackgroundColor: null,
+        plotBorderWidth: null,
+        plotShadow: false,
+        type: 'pie'
+    },
+    title: {
+        text: 'Gráfico de tareas asignadas por departamentos'
+    },
+    tooltip: {
+        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+    },
+    accessibility: {
+        point: {
+            valueSuffix: '%'
+        }
+    },
+    plotOptions: {
+        pie: {
+            allowPointSelect: true,
+            cursor: 'pointer',
+            dataLabels: {
+                enabled: true,
+                format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+            }
+        }
+    },
+    series: [{
+        name: 'Brands',
+        colorByPoint: true,
+        data: [{% for p in porcentajes_depto %}
+                    {   name:'{{ p.1 }}',
+                        y: {{ p.0 }}
+                    },
+                {% endfor %}
+        ]
+                    
+    }]
+});
+</script>
+
+<script>
+    Highcharts.chart('containerGrafico4', {
+    chart: {
+        type: 'column'
+    },
+    title: {
+        text: 'Destribución de tareas por departamento'
+    },
+    
+    xAxis: {
+        categories: [
+            'Departamentos'
+        ],
+        crosshair: true
+    },
+    yAxis: {
+        min: 0,
+        title: {
+            text: 'Cant Tareas'
+        }
+    },
+    tooltip: {
+        headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+        pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+            '<td style="padding:0"><b>{point.y:.1f}</b></td></tr>',
+        footerFormat: '</table>',
+        shared: true,
+        useHTML: true
+    },
+    plotOptions: {
+        column: {
+            pointPadding: 0.2,
+            borderWidth: 0
+        }
+    },
+    series: [{% for p in porcentajes_depto %}{
+        name: '{{p.1}}',
+        data: [{{ p.2 }}]
+
+    }, {% endfor %}]
+});
+</script>
+
+<script type="application/javascript">
+    Highcharts.setOptions({
+     
+    });
+    Highcharts.chart('containerGrafico5', {
+    chart: {
+        plotBackgroundColor: null,
+        plotBorderWidth: null,
+        plotShadow: false,
+        type: 'pie'
+    },
+    title: {
+        text: 'Gráfico de tareas asignadas por grupos'
+    },
+    tooltip: {
+        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+    },
+    accessibility: {
+        point: {
+            valueSuffix: '%'
+        }
+    },
+    plotOptions: {
+        pie: {
+            allowPointSelect: true,
+            cursor: 'pointer',
+            dataLabels: {
+                enabled: true,
+                format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+            }
+        }
+    },
+    series: [{
+        name: 'Brands',
+        colorByPoint: true,
+        data: [{% for p in porcentajes_grupo %}
+                    {   name:'{{ p.1 }}',
+                        y: {{ p.0 }}
+                    },
+                {% endfor %}
+        ]
+                    
+    }]
+});
+</script>
+
+<script>
+    Highcharts.chart('containerGrafico6', {
+    chart: {
+        type: 'column'
+    },
+    title: {
+        text: 'Destribución de tareas por grupos'
+    },
+    
+    xAxis: {
+        categories: [
+            'Grupos'
+        ],
+        crosshair: true
+    },
+    yAxis: {
+        min: 0,
+        title: {
+            text: 'Cant Tareas'
+        }
+    },
+    tooltip: {
+        headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+        pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+            '<td style="padding:0"><b>{point.y:.1f}</b></td></tr>',
+        footerFormat: '</table>',
+        shared: true,
+        useHTML: true
+    },
+    plotOptions: {
+        column: {
+            pointPadding: 0.2,
+            borderWidth: 0
+        }
+    },
+    series: [{% for p in porcentajes_grupo %}{
+        name: '{{p.1}}',
+        data: [{{ p.2 }}]
+
+    }, {% endfor %}]
+});
+</script>
+
+<script type="application/javascript">
+    Highcharts.setOptions({
+     
+    });
+    Highcharts.chart('containerGrafico7', {
+    chart: {
+        plotBackgroundColor: null,
+        plotBorderWidth: null,
+        plotShadow: false,
+        type: 'pie'
+    },
+    title: {
+        text: 'Gráfico de tareas asignadas por usuarios'
+    },
+    tooltip: {
+        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+    },
+    accessibility: {
+        point: {
+            valueSuffix: '%'
+        }
+    },
+    plotOptions: {
+        pie: {
+            allowPointSelect: true,
+            cursor: 'pointer',
+            dataLabels: {
+                enabled: true,
+                format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+            }
+        }
+    },
+    series: [{
+        name: 'Brands',
+        colorByPoint: true,
+        data: [{% for p in porcentajes_usuario %}
+                    {   name:'{{ p.1 }}',
+                        y: {{ p.0 }}
+                    },
+                {% endfor %}
+        ]
+                    
+    }]
+});
+</script>
+
+<script>
+    Highcharts.chart('containerGrafico8', {
+    chart: {
+        type: 'column'
+    },
+    title: {
+        text: 'Destribución de tareas por usuarios'
+    },
+    
+    xAxis: {
+        categories: [
+            'Usuarios'
+        ],
+        crosshair: true
+    },
+    yAxis: {
+        min: 0,
+        title: {
+            text: 'Cant Tareas'
+        }
+    },
+    tooltip: {
+        headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+        pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+            '<td style="padding:0"><b>{point.y:.1f}</b></td></tr>',
+        footerFormat: '</table>',
+        shared: true,
+        useHTML: true
+    },
+    plotOptions: {
+        column: {
+            pointPadding: 0.2,
+            borderWidth: 0
+        }
+    },
+    series: [{% for p in porcentajes_usuario %}{
+        name: '{{p.1}}',
+        data: [{{ p.2 }}]
+
+    }, {% endfor %}]
+});
+</script>
+
+
+
+
+<!-- <script>
+    
+    var element = document.getElementById(imprimir_grupo_estadistica);
+    console.log(element);
+    html2pdf(element);
+
+</script> -->
+
+
+{% endblock %}

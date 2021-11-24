@@ -4,6 +4,8 @@ from django.contrib.auth.models import User, Group, Permission
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.contrib.auth.decorators import login_required
 from django.contrib.contenttypes.models import ContentType
+from django.template.loader import get_template
+from xhtml2pdf import pisa
 from datetime import datetime, timedelta
 from django.db import connection
 from django.core.paginator import Paginator
@@ -273,7 +275,7 @@ def tarea_completada(request, id):
             'fecha_termino':t[5],
             'usuario':t[7]
         }
-    print(tarea)
+    
     data = {
         'form':forms.TareaCompletaForm(data_form),
     }
@@ -796,9 +798,9 @@ def estadisticas_grupo(request,id):
     tareas_realizada = []
     porcentajes = []
     porcentaje_estado_tareas=[]
-    print(id)
+    
     tareas_grupo = listar_tareas_grupo(id)
-    print(tareas_grupo)
+    
     for t in tareas_grupo:
         if t[2] == 0:
             tareas_no_realizada.append(t)
@@ -809,7 +811,7 @@ def estadisticas_grupo(request,id):
     can_tareas_realizadas = len(tareas_realizada)
 
     usuarios_grupo = listar_usuarios_grupo(id)
-    print(usuarios_grupo)
+    
     try:
         ##Porcentajes
         porcentaje_tareas_no_realizada = (can_tareas_no_realizadas*100)/can_tareas_grupo
@@ -918,6 +920,113 @@ def estadisticas_usuario(request,id):
     }
 
     return render(request,'process/estadisticas/estadistica_usuario.html', data)
+
+def estadistica_general(request):
+    tareas = []
+    porcentajes = []
+    porcentajes_depto = []
+    porcentajes_grupo = []
+    porcentajes_usuario = []
+
+    suma = 0
+    ##Contar tareas totales.
+    tareas_realizadas = listar_tareas_bd(1,1,1)
+    tareas_sin_realizar = listar_tareas_bd(0,1,1)
+    tareas_sin_asignar = listar_tareas_sin_asignar()
+    for t in tareas_realizadas:
+        tareas.append(t)
+    for r in tareas_sin_realizar:
+        tareas.append(r)
+    
+    
+    cant_tareas_totales_asignadas = len(tareas)
+    cant_tareas_sin_asignar = len(tareas_sin_asignar)
+    cant_tareas_totales = cant_tareas_totales_asignadas + cant_tareas_sin_asignar
+    cant_tareas_realizadas = len(tareas_realizadas)
+    cant_tareas_sin_realizar = len(tareas_sin_realizar)
+
+    
+
+    try:
+        ##Porcentajes
+
+        porcentaje_tareas_realizada = (cant_tareas_realizadas*100)/cant_tareas_totales_asignadas
+        porcentajes.append(porcentaje_tareas_realizada)
+        porcentaje_tareas_no_realizada = (cant_tareas_sin_realizar*100)/cant_tareas_totales_asignadas
+        porcentajes.append(porcentaje_tareas_no_realizada)
+
+        porcentaje_tareas_asignadas = (cant_tareas_totales_asignadas*100)/cant_tareas_totales
+        porcentaje_tareas_no_asignadas = (cant_tareas_sin_asignar*100)/cant_tareas_totales
+        porcentajes.append(porcentaje_tareas_asignadas)
+        porcentajes.append(porcentaje_tareas_no_asignadas)
+
+        ##Porcentajes tareas asignadas por departamento.
+        tareas_depto = contar_tareas_total_depto()
+        for y in tareas_depto:
+            suma = suma + y[0]
+            
+        for p in tareas_depto:
+            x = (p[0]*100)/suma
+            lista = []
+            lista.append(x)
+            lista.append(p[2])
+            lista.append(p[0])
+            lista.append(p[1])
+            porcentajes_depto.append(lista)
+        
+        ##Porcentajes tareas asignadas por grupo
+        tareas_grupo = contar_tareas_total_grupo()
+        suma = 0
+        for y in tareas_grupo:
+            suma = suma + y[0]
+            print(suma)  
+        for p in tareas_grupo:
+            x = (p[0]*100)/suma
+            lista = []
+            lista.append(x)
+            lista.append(p[2])
+            lista.append(p[0])
+            lista.append(p[1])
+            porcentajes_grupo.append(lista)
+        
+
+        ##Porcentajes tareas asignadas usuarios.
+        tareas_usuario = contar_tareas_total_usuario()
+        suma = 0
+        for y in tareas_usuario:
+            suma = suma + y[0]
+            print(suma)  
+        for p in tareas_usuario:
+            x = (p[0]*100)/suma
+            lista = []
+            lista.append(x)
+            lista.append(p[2])
+            lista.append(p[0])
+            lista.append(p[1])
+            porcentajes_usuario.append(lista)
+        print(porcentajes_usuario)
+    except:
+        pass
+
+    # print(tareas_depto)
+    
+    # print (tareas_sin_asignar) 
+    data = {
+        'cant_tareas_totales_asignadas':cant_tareas_totales_asignadas,
+        'cant_tareas_realizadas':cant_tareas_realizadas,
+        'cant_tareas_totales':cant_tareas_totales,
+        'cant_tareas_sin_realizar':cant_tareas_sin_realizar,
+        'cant_tareas_sin_asignar':cant_tareas_sin_asignar,
+        
+        ##Porcentajes
+        'porcentajes':porcentajes,
+        'porcentajes_depto':porcentajes_depto,
+        'porcentajes_grupo':porcentajes_grupo,
+        'porcentajes_usuario':porcentajes_usuario,
+    
+
+    }
+    return render(request,'process/estadisticas/estadistica_general.html',data)
 ##Métodos de pl/sql
 def listar_tareas_departamento(id_departamento, realizado):
     django_cursor = connection.cursor()
@@ -1029,5 +1138,206 @@ def listar_tareas_usuario(id_usuario):
     return lista
     # SP_LISTAR_TAREAS_GRUPO
 
+def listar_tareas_sin_asignar():
+    django_cursor = connection.cursor()
+    cursor = django_cursor.connection.cursor()
+    out_cur = django_cursor.connection.cursor()
+    cursor.callproc('SP_LISTAR_TAREAS_SIN_ASIGNAR',[out_cur])
+
+    lista = []
+
+    for l in out_cur:
+        lista.append(l)
+    
+    return lista
+
+def contar_tareas_total_depto():
+    django_cursor = connection.cursor()
+    cursor = django_cursor.connection.cursor()
+    out_cur = django_cursor.connection.cursor()
+    cursor.callproc('SP_CONTAR_TAREAS_DEPTOS',[out_cur])
+
+    lista = []
+
+    for l in out_cur:
+        lista.append(l)
+    
+    return lista
+
+def contar_tareas_total_grupo():
+    django_cursor = connection.cursor()
+    cursor = django_cursor.connection.cursor()
+    out_cur = django_cursor.connection.cursor()
+    cursor.callproc('SP_CANT_TAREAS_GRUPOS_TOTAL',[out_cur])
+
+    lista = []
+
+    for l in out_cur:
+        lista.append(l)
+    
+    return lista
+
+def contar_tareas_total_usuario():
+    django_cursor = connection.cursor()
+    cursor = django_cursor.connection.cursor()
+    out_cur = django_cursor.connection.cursor()
+    cursor.callproc('SP_CONTAR_TAREAS_USUARIOS',[out_cur])
+
+    lista = []
+
+    for l in out_cur:
+        lista.append(l)
+
+    return lista
+
 def perfil_usuario(request):
     return render(request, 'registration/perfil_usuario.html')
+
+def reporte_estadistica_departamento(request, id):
+
+    departamento = get_object_or_404(models.Departamento, id=id)
+    porcentajes=[]
+    porcentaje_estado_tareas=[]
+
+    ##Tareas total departamento.
+    tareas_departamento = listar_tareas_departamento_total(departamento.id)
+    can_tareas_depto = len(tareas_departamento)
+
+    ##Tareas departamento realizadas.
+    tareas_departamento_realizadas = listar_tareas_departamento(departamento.id,1)
+    can_tareas_realizadas = len(tareas_departamento_realizadas)
+    
+
+    ##Tareas departamento sin realizar.
+    tareas_departamento_no_realizadas = listar_tareas_departamento(departamento.id,0)
+    can_tareas_no_realizadas = len(tareas_departamento_no_realizadas)
+    
+
+    ##Usuarios por departamento.
+    usuarios_departamento = listar_usuarios_departamento(departamento.id)
+
+    try:
+        ##Porcentajes
+
+        porcentaje_tareas_realizada = (can_tareas_realizadas*100)/can_tareas_depto
+        porcentajes.append(porcentaje_tareas_realizada)
+        porcentaje_tareas_no_realizada = (can_tareas_no_realizadas*100)/can_tareas_depto
+        porcentajes.append(porcentaje_tareas_no_realizada)
+        
+        estado_tarea_rojo = listar_estado_tareas_departamento(departamento.id,0,'r')
+        estado_tarea_amarilla = listar_estado_tareas_departamento(departamento.id,0,'a')
+        estado_tarea_verde = listar_estado_tareas_departamento(departamento.id,0,'v')
+
+        porcentaje_estado_rojo = (len(estado_tarea_rojo)*100)/can_tareas_no_realizadas
+        porcentaje_estado_amarilla = (len(estado_tarea_amarilla)*100)/can_tareas_no_realizadas
+        porcentaje_estado_verde = (len(estado_tarea_verde)*100)/can_tareas_no_realizadas
+        porcentaje_estado_tareas.append(porcentaje_estado_rojo)
+        porcentaje_estado_tareas.append(porcentaje_estado_amarilla)
+        porcentaje_estado_tareas.append(porcentaje_estado_verde)
+    except:
+        pass
+
+    template_path = 'process/pdf/reporte_estadistica.html'
+
+    context = {
+        'departamento': departamento,
+        'tareas_departamento':tareas_departamento,
+        'can_tareas_depto':can_tareas_depto,
+        'tareas_departamento_realizadas': tareas_departamento_realizadas,
+        'can_tareas_realizadas':can_tareas_realizadas,
+        'tareas_departamento_no_realizadas':tareas_departamento_no_realizadas,
+        'can_tareas_no_realizadas':can_tareas_no_realizadas,
+        'usuarios_departamento':usuarios_departamento,
+        'porcentajes':porcentajes,
+        'porcentaje_estado_tareas':porcentaje_estado_tareas,
+
+    }
+
+    
+    # Create a Django response object, and specify content_type as pdf
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'filename="estadistica_departamento.pdf"'
+    # find the template and render it.
+    template = get_template(template_path)
+    html = template.render(context)
+
+    # create a pdf
+    pisa_status = pisa.CreatePDF(
+       html, dest=response)
+    # if error then show some funy view
+    if pisa_status.err:
+       return HttpResponse('We had some errors <pre>' + html + '</pre>')
+    return response
+
+def reporte_estadistica_grupo(request,id):
+    grupo = get_object_or_404(Group, id=id)
+    tareas_no_realizada = []
+    tareas_realizada = []
+    porcentajes = []
+    porcentaje_estado_tareas=[]
+
+    tareas_grupo = listar_tareas_grupo(id)
+    
+    for t in tareas_grupo:
+        if t[2] == 0:
+            tareas_no_realizada.append(t)
+        elif t[2] == 1:
+            tareas_realizada.append(t)
+    can_tareas_grupo = len(tareas_grupo)
+    can_tareas_no_realizadas = len(tareas_no_realizada)
+    can_tareas_realizadas = len(tareas_realizada)
+
+    usuarios_grupo = listar_usuarios_grupo(id)
+    
+    try:
+        ##Porcentajes
+        porcentaje_tareas_no_realizada = (can_tareas_no_realizadas*100)/can_tareas_grupo
+        porcentaje_tareas_realizada = (can_tareas_realizadas*100)/can_tareas_grupo
+        porcentajes.append(porcentaje_tareas_realizada)
+        porcentajes.append(porcentaje_tareas_no_realizada)
+        
+        ##Porcentaje estado tarea
+        estado_tarea_rojo = listar_estado_tareas_grupo(id,0,'r')
+        estado_tarea_amarilla = listar_estado_tareas_grupo(id,0,'a')
+        estado_tarea_verde = listar_estado_tareas_grupo(id,0,'v')
+
+        porcentaje_estado_rojo = (len(estado_tarea_rojo)*100)/can_tareas_no_realizadas
+        porcentaje_estado_amarilla = (len(estado_tarea_amarilla)*100)/can_tareas_no_realizadas
+        porcentaje_estado_verde = (len(estado_tarea_verde)*100)/can_tareas_no_realizadas
+        porcentaje_estado_tareas.append(porcentaje_estado_rojo)
+        porcentaje_estado_tareas.append(porcentaje_estado_amarilla)
+        porcentaje_estado_tareas.append(porcentaje_estado_verde)
+    except:
+        pass
+
+    
+    context = {
+        'grupo':grupo,
+        'tareas_grupo':tareas_grupo,
+        'tareas_no_realizada':tareas_no_realizada,
+        'can_tareas_grupo':can_tareas_grupo,
+        'can_tareas_no_realizadas':can_tareas_no_realizadas,
+        'tareas_realizada':tareas_realizada,
+        'can_tareas_realizadas':can_tareas_realizadas,
+        'usuarios_grupo':usuarios_grupo,
+        'porcentajes':porcentajes,
+        'porcentaje_estado_tareas':porcentaje_estado_tareas
+
+
+    }
+    template_path = 'process/pdf/reportes_estadistica_grupo.html'
+
+    # Create a Django response object, and specify content_type as pdf
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'filename="estadistica_departamento.pdf"'
+    # find the template and render it.
+    template = get_template(template_path)
+    html = template.render(context)
+
+    # create a pdf
+    pisa_status = pisa.CreatePDF(
+       html, dest=response)
+    # if error then show some funy view
+    if pisa_status.err:
+       return HttpResponse('We had some errors <pre>' + html + '</pre>')
+    return response

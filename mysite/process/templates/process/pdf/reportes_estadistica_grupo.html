@@ -1,14 +1,9 @@
-{% extends 'process/base.html'%}
-{% load crispy_forms_tags %}
-{% load static %}
-{% block content %}
 
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/modules/exporting.js"></script>
-    <script src="https://code.highcharts.com/modules/export-data.js"></script>
-    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
-    
-    
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
 
 <div class="container">
     <br>
@@ -17,11 +12,9 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
-                    <div id="imprimir_grupo_estadistica" class="row">
+                    <div class="row">
                         <input type=button class="btn btn-info col-xl-2" value="Volver Atrás" onClick="javascript:history.go(-1);">
                         &nbsp;
-                        
-                        <a class="btn btn-success col-xl-2" href="{% url 'reporte_estadistica_grupo' grupo.id %}">Imprimir Reporte</a>
                         <hr>
                         <h2>Estadisticas grupo {{grupo.name}}.</h2>
                         <hr>
@@ -130,7 +123,6 @@
             </div>
         </div>
     </div>
-    
 </div>
 
 
@@ -226,15 +218,3 @@
 });
 </script>
 
-
-
-<!-- <script>
-    
-    var element = document.getElementById(imprimir_grupo_estadistica);
-    console.log(element);
-    html2pdf(element);
-
-</script> -->
-
-
-{% endblock %}
