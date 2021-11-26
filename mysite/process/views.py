@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, get_user_model
 from django.contrib.auth.models import User, Group, Permission
 from django.http import HttpResponse, HttpResponseRedirect, Http404
@@ -8,7 +9,6 @@ from django.template.loader import get_template
 from xhtml2pdf import pisa
 from datetime import datetime, timedelta
 from django.db import connection
-from django.core.paginator import Paginator
 from . import forms
 from . import models
 from . import filters
@@ -34,20 +34,39 @@ def agregar_tarea(request):
         if request.method=='POST':
             formulario = forms.TareaForm(data=request.POST, files=request.FILES)
             if formulario.is_valid():
-                formulario.save()
-                tarea = formulario.save()
-            
                 
-                calculoEstado.fechaActualCalculo = datetime.now()
-                calculoEstado.tarea = tarea
-                calculoEstado.save()
 
-                semaforo.calculoEstado = calculoEstado
-                semaforo.semaforoRojo = timedelta(days=7)
-                semaforo.save()
+                if formulario['is_tipo'].value() == True:
+                    usuario = get_object_or_404(models.User,id=formulario['usuario'].value())
+                    # print(usuario)
+                    # print(formulario['fechaLimite'].value())
+                    date = datetime.strptime(formulario['fechaLimite'].value(),'%m/%d/%Y')
+                    tarea = models.Tarea(
+                        nombre=formulario['nombre'].value(),
+                        descripcion=formulario['descripcion'].value()+" / Tarea tipo /",
+                        is_tipo=True,
+                        fechaCreacion=datetime.now(),
+                        fechaLimite=date,
+                        usuario=usuario,
+                    )
+                    tarea.save()
+                else:
+                    formulario.save()
+                    tarea = formulario.save()
+                
+                    
+                    calculoEstado.fechaActualCalculo = datetime.now()
+                    calculoEstado.tarea = tarea
+                    calculoEstado.save()
 
-                data["mensaje"] = "Guardado correctamente."
+                    semaforo.calculoEstado = calculoEstado
+                    semaforo.semaforoRojo = timedelta(days=7)
+                    semaforo.save() 
+
+                messages.success(request, "Tarea guardada correctamente")
+                data["form"] = formulario
             else:
+                formulario = forms.TareaForm()
                 data["form"] = formulario
         return render(request, 'process/tarea/agregar_tarea.html', data)
     else:
@@ -64,7 +83,7 @@ def listar_tareas(request):
     calculos = []
     semaforos = []
     myFilter = None
-    tareas = models.Tarea.objects.filter(realizado=False)    
+    tareas = models.Tarea.objects.filter(realizado=False, is_tipo=False)    
     for t in tareas:
         calculoEstado = models.CalculoEstado.objects.get(tarea=t)
         calculoEstado.fechaActualCalculo = datetime.now().date()
@@ -84,15 +103,15 @@ def listar_tareas(request):
 
     if request.user.is_superuser:
         user = "all"
-        tareas = models.Tarea.objects.filter(realizado=False)
+        tareas = models.Tarea.objects.filter(realizado=False,is_tipo=False)
         myFilter = filters.TareaFilter(request.GET, queryset=tareas)
         tareas = myFilter.qs
         if request.POST.get('filtroSemaforo'):
             tareas = filtroSemaforo(request.POST['filtroEstadoSemaforo'],user)
         elif request.POST.get('filtroUsuario'):
-            tareas = models.Tarea.objects.filter(realizado=False, usuario=request.POST['filtro_usuario'])
+            tareas = models.Tarea.objects.filter(realizado=False, usuario=request.POST['filtro_usuario'],is_tipo=False)
         elif request.POST.get('limpiarFiltro'):
-            tareas = models.Tarea.objects.filter(realizado=False)
+            tareas = models.Tarea.objects.filter(realizado=False,is_tipo=False)
         elif request.POST.get('filtroGrupo'):
             departamento = get_object_or_404(models.Departamento, id=request.POST['filtro_grupo'])
             tareas_departamento = listar_tareas_departamento(departamento.id,0)
@@ -102,15 +121,15 @@ def listar_tareas(request):
                 tareas.append(tarea1) 
             # tareas = models.Tarea.objects.filter(realizado=False, usuario=usuario_flag)
         else:
-            tareas = models.Tarea.objects.filter(realizado=False)
+            tareas = models.Tarea.objects.filter(realizado=False,is_tipo=False)
     else:
         user = request.user
-        tareas = models.Tarea.objects.filter(usuario = user, realizado = False)                                        
+        tareas = models.Tarea.objects.filter(usuario = user, realizado = False, is_tipo=False)                                        
         #Bloque filtro por semáforo.
         if request.POST.get('filtroSemaforo'):
             tareas = filtroSemaforo(request.POST['filtroEstadoSemaforo'], user)
         else:
-            tareas = models.Tarea.objects.filter(usuario = user, realizado = False)                                        
+            tareas = models.Tarea.objects.filter(usuario = user, realizado = False,is_tipo=False)                                        
         
         
     data = {
@@ -338,7 +357,7 @@ def modificar_tarea(request, id):
 
     forms 
     data={
-        'form': forms.TareaForm(instance=tarea),
+        'form': forms.TareaModificarForm(instance=tarea),
         'formRechazo': forms.RechazoForm(),
         'formSolicitudRechazo': forms.SolicitudRechazoForm(data_form),
         'formRespuesta': forms.RespuestaSolicitudForm(),
@@ -352,16 +371,19 @@ def modificar_tarea(request, id):
 
     if request.method == 'POST':
         if request.POST.get("form_type") == 'modificarform':
-            formulario = forms.TareaForm(data=request.POST, instance=tarea, files=request.FILES)
+            formulario = forms.TareaModificarForm(data=request.POST, instance=tarea, files=request.FILES)
             if formulario.is_valid():
                 if request.POST.get('terminar'):
                     tarea.realizado = True
                     tarea.fechaTermino = datetime.now()
                     tarea.save()
-                    return HttpResponseRedirect('/listar/tarea')
+                    messages.success(request, "Tarea terminada correctamente")
+                    return redirect(to="listar_tareas")
                 else:    
                     formulario.save()
+                    messages.success(request, "Modificado correctamente")
                     return redirect(to="listar_tareas")
+                    
             data["form"] = formulario
 
         if request.POST.get("form_type") == 'motivoform':
@@ -417,9 +439,16 @@ def agregar_flujo_tarea(request):
         if request.method == 'POST':
             formulario = forms.FlujoTareaForm(data=request.POST, files=request.FILES)
             if formulario.is_valid():
-                formulario.save()
-                data["mensaje"] = "Guardado correctamente."
+                flujo_tarea = models.FlujoTarea()
+                flujo_tarea.nombre = formulario['nombre'].value()
+                flujo_tarea.save()
+                for i in formulario['tareas'].value():
+                    tarea = get_object_or_404(models.Tarea, id=i)
+                    flujo_tarea.tareas.add(tarea)
+                flujo_tarea.save()
+                messages.success(request, "Flujo añadido correctamente")
             else:
+                formulario = forms.FlujoTareaForm()
                 data["form"] = formulario
         
         return render(request, 'process/flujo_tarea/agregar_flujo_tarea.html', data)
@@ -441,20 +470,58 @@ def listar_flujo_tareas(request):
 def modificar_flujo_tarea(request, id):
     if request.user.has_perm('process.change_flujotarea'):
         flujo_tarea = get_object_or_404(models.FlujoTarea, id=id)
+        print(flujo_tarea.tareas.all())
 
         data={
-            'form': forms.FlujoTareaForm(instance=flujo_tarea)
+            'form': forms.FlujoModificarForm(instance=flujo_tarea)
         }
 
         if request.method == 'POST':
-            formulario = forms.FlujoTareaForm(data=request.POST, instance=flujo_tarea, files=request.FILES)
+            formulario = forms.FlujoModificarForm(data=request.POST, instance=flujo_tarea, files=request.FILES)
             if formulario.is_valid():
-                formulario.save()
-                return redirect(to="listar_flujo_tareas")
+                if request.POST.get('editar'):
+                    flujo_tarea.tareas.clear()
+                    for i in formulario['tareas'].value():
+                        print(i)
+                        flujo_tarea.tareas.add(i)
+                    formulario.save()
+                    messages.success(request, "Flujo modificado correctamente")
+                elif request.POST.get('ejecutar'):
+                    flujo_tarea = get_object_or_404(models.FlujoTarea, id=id)
+                    for p in flujo_tarea.tareas.all(): 
+                        calculoEstado = models.CalculoEstado()
+                        semaforo = models.Semaforo()
+                        t = models.Tarea.objects.get(id=p.id)
+                        now = datetime.now()
+                        fecha = now.strftime("%m/%d/%Y, %H:%M:%S")
+                        date = datetime.strptime(formulario['fechaLimite'].value(),'%m/%d/%Y')
+                        tarea_nueva = models.Tarea(
+                            nombre = t.nombre+" / "+flujo_tarea.nombre,
+                            descripcion = t.descripcion+" / "+flujo_tarea.nombre+" Ejecutada el: "+fecha,
+                            realizado = False,
+                            is_tipo = False,
+                            fechaLimite = date,
+                            usuario = t.usuario
+                        )
+                        tarea_nueva.save()
+                        calculoEstado.fechaActualCalculo = datetime.now()
+                        calculoEstado.tarea = tarea_nueva
+                        calculoEstado.save()
+
+                        semaforo.calculoEstado = calculoEstado
+                        semaforo.semaforoRojo = timedelta(days=7)
+                        semaforo.save()
+                        
+                        
+                    messages.success(request, "Flujo ejecutado correctamente")
+
+                
             data["form"] = formulario
         return render(request,'process/flujo_tarea/modificar_flujo_tarea.html', data)
     else:
         return render(request,'process/error_permiso.html')
+
+# def obtener_tareas_flujo(id_flujo):
 
 ##Gestión de usuarios.
 @login_required()
@@ -478,7 +545,7 @@ def registrar_usuario(request):
                             user.groups.add(grupos)  
                             user.save()                         
                             formulario.save()
-                            data["mensaje"] = "Guardado correctamente."
+                            messages.success(request, "Usuario registrado correctamente")
                         else:
                             data["mensaje"] = "Contraseña insegura."
                             data["form"] = formulario
@@ -642,12 +709,13 @@ def responder_problema(request, id):
                         reporte.estado = True
                         reporte.save()
                         respuesta.save()    
-
-                        data["mensaje"] = "Guardado correctamente."
+                        messages.success(request, "Problema respondido correctamente")
+                        return redirect(to="responder_problema",id=reporte.id)
 
                     else:
                         data["form"] = formulario
-                        
+        else:
+            data["formSolucion"] = forms.SolucionProblemaOkForm(instance=respuesta)             
         return render(request, 'process/problemas/responder_problema.html', data)
     else:
         data["formSolucion"] = forms.SolucionProblemaOkForm(instance=respuesta)

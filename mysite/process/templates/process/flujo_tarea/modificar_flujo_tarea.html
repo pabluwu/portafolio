@@ -16,13 +16,23 @@
 
                         {% csrf_token %}
                         {{ form | crispy }}
-                        <div class="d-flex justify-content-center">
-                            <a href="{% url 'listar_flujo_tareas'%}" class="btn btn-secondary">Cancelar</a>
-                            &nbsp;
-                            {% if perms.process.change_flujotarea %}
-                            <input type="submit" value="Editar" class="btn btn-primary">
-                            {% endif %}
+                        <div class="row justify-content-between" >
+                            <div class="file-modificar col-xl-6 col-md-6 ">
+                                <a href="{% url 'listar_flujo_tareas'%}" class="btn btn-secondary">Cancelar</a>
+                            
+                            </div>
+                            <div class="file-modificar col-xl-6 col-md-6 ">
+                                {% if perms.process.change_flujotarea %}
+                                <input type="submit" value="Editar" class="btn btn-primary" name="editar">
+                                {% endif %}
+                            
+                            </div>
+                            <div class="file-modificar col-xl-6 col-md-6 ">
+                                <input type="submit" value="Ejecutar" class="btn btn-success" name="ejecutar">
+                            
+                            </div>
                         </div>
+                        
 
                     </form>
                     {{mensaje}}

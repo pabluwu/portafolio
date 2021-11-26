@@ -17,6 +17,7 @@ class Tarea(models.Model):
     nombre = models.CharField(max_length=50, blank=False)
     descripcion = models.TextField(blank=False)
     realizado = models.BooleanField(default=False)
+    is_tipo = models.BooleanField(default=False)
     fechaCreacion = models.DateField(auto_now_add=True, auto_now=False)
     fechaLimite = models.DateField(default=datetime.now)
     fechaTermino = models.DateField(default=datetime.now)

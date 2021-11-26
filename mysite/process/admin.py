@@ -9,3 +9,6 @@ admin.site.register(models.CalculoEstado)
 admin.site.register(models.Semaforo)
 admin.site.register(models.User)
 admin.site.register(models.Departamento)
+admin.site.register(models.ReportarProblema)
+admin.site.register(models.RespuestaProblema)
+
