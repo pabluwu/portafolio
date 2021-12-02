@@ -156,13 +156,14 @@
                 </div>
                 <ul class="sub-menu">
                     <li><a href="" class="link_name">Estadisticas.</a></li>
-                    
-                    <li><a href="{% url 'listar_departamentos_estadisticas' %}">Departamento</a></li>
-                    
-                    <li><a href="{% url 'listar_grupo_estadistica' %}">Grupo</a></li>
+                    {% if perms.process.view_estadistica %}
+                        <li><a href="{% url 'estadistica_general' %}">Resumen</a></li>
+                        <li><a href="{% url 'listar_departamentos_estadisticas' %}">Departamento</a></li>
+                        
+                        <li><a href="{% url 'listar_grupo_estadistica' %}">Grupo</a></li>
+                    {% endif %}
                     <li><a href="{% url 'listar_usuario_estadistica' %}">Usuarios</a></li>
-                    <li><a href="{% url 'estadistica_general' %}">Resumen</a></li>
-
+                    
                 </ul>
             </li>
             <li>
@@ -221,6 +222,12 @@
 <script>
     $(function () {
       $("#id_fechaLimite").datepicker();
+      
+    });
+</script>
+<script>
+    $(function () {
+      $("#fechaLimite2").datepicker();
       
     });
 </script>

@@ -1,0 +1,135 @@
+
+
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+    
+    
+
+<div class="container">
+    <br>
+                    <br>
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <input type=button class="btn btn-info col-xl-2" value="Volver Atrás" onClick="javascript:history.go(-1);">
+                        &nbsp;
+                        
+                        
+                        
+                        
+                        <hr>
+                        <h2>Estadisticas Generales.</h2>
+                        <hr>
+                        <div class="card col-xl-4">
+                            <div class="card-body ">
+                                <h5>Tareas Totales: {{cant_tareas_totales}} </h5>
+                                <hr>
+                                <h5>Tareas Totales Asignadas: {{cant_tareas_totales_asignadas}} </h5>
+                                
+                                <h5>Tareas Sin Asignar: {{cant_tareas_sin_asignar}} </h5>
+                                <hr>
+                                <h5>Tareas Asignadas No realizadas: {{cant_tareas_sin_realizar}} </h5>
+                                
+                                <h5>Tareas Asignadas Realizadas: {{cant_tareas_realizadas}} </h5>
+                            </div>
+                        </div>
+                        
+                        <div class="card col-xl-4">
+                            <div class="card-body">
+                                <div id="containerGrafico"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="card col-xl-4">
+                             <div class="card-body">
+                                <div id="containerGrafico2"></div>
+                            </div>
+                        </div>
+                        <hr>
+                        <h2>Estadisticas Generales Departamentos.</h2>
+                        <hr>
+                        <div class="card col-xl-4">
+                            <div class="card-body ">
+                                <h5>Tareas asignadas por departamento:</h5>
+                                <hr>
+                                {% for p in porcentajes_depto %}
+                                
+                                <h5><a href="{% url 'estadistica_departamento' p.3 %}"
+                                    class="text-success text-decoration-none">{{p.1}}</a>: {{ p.2 }} tareas.</h5>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="card col-xl-4">
+                            <div class="card-body">
+                                <div id="containerGrafico3"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="card col-xl-4">
+                             <div class="card-body">
+                                <div id="containerGrafico4"></div>
+                            </div>
+                        </div>
+                        <h2>Estadisticas Generales Grupos.</h2>
+                        <hr>
+                        <div class="card col-xl-4">
+                            <div class="card-body ">
+                                <h5>Tareas asignadas por grupo:</h5>
+                                <hr>
+                                {% for p in porcentajes_grupo %}
+                                <h5><a href="{% url 'estadisticas_grupo' p.3 %}"
+                                    class="text-success text-decoration-none">{{p.1}}</a>: {{ p.2 }} tareas.</h5>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="card col-xl-4">
+                            <div class="card-body">
+                                <div id="containerGrafico5"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="card col-xl-4">
+                             <div class="card-body">
+                                <div id="containerGrafico6"></div>
+                            </div>
+                        </div>
+                        <h2>Estadisticas Generales Usuarios.</h2>
+                        <hr>
+                        <div class="card col-xl-4">
+                            <div class="card-body ">
+                                <h5>Tareas asignadas por usuario:</h5>
+                                <hr>
+                                {% for p in porcentajes_usuario %}
+                                <h5><a href="{% url 'estadisticas_usuario' p.3 %}"
+                                    class="text-success text-decoration-none">{{p.1}}</a>: {{ p.2 }} tareas.</h5>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="card col-xl-4">
+                            <div class="card-body">
+                                <div id="containerGrafico7"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="card col-xl-4">
+                             <div class="card-body">
+                                <div id="containerGrafico8"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+

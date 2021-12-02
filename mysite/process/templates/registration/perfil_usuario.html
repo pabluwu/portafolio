@@ -1,0 +1,83 @@
+{% extends 'process/base.html'%}
+{% load crispy_forms_tags %}
+{% load static %}
+{% block content %}
+
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+    
+    
+
+<div class="container">
+    <br>
+                    <br>
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div id="imprimir_grupo_estadistica" class="row">
+                        
+                        
+                        
+                        <hr>
+                        <h2>Mi Perfil</h2>
+                        <hr>
+                        <div class="card col-xl-8">
+                            <div class="card-body ">
+                                <h5>Nombre de usuario: <strong>{{ user.username }}</strong> </h5>
+                                <hr>
+                                <h5>Nombre: <strong>{{ user.first_name }}</strong></h5>
+                                <hr>
+                                <h5>Apellido: <strong>{{ user.last_name }}</strong></h5>
+                                <hr>
+                                <h5>Email: <strong>{{ user.email }}</strong></h5>
+                                <hr>
+                                <h5>Fecha de ingreso: <strong>{{ user.date_joined }}</strong></h5>
+                                <hr>
+                                <h5>Última fecha de ingreso: <strong>{{ user.last_login }}</strong></h5>
+                                <hr>
+                                <h5>Departamento al que pertenezco: <strong>{{ departamento.nombre }}</strong></h5>
+                                <hr>
+                                <h5>Grupo al que pertenezco: <strong>{{ grupo.name }}</strong></h5>
+                            </div>
+                        </div>
+                        <div class="card col-xl-4">
+                            <input type=button class="btn btn-primary" value="Volver Atrás" onClick="javascript:history.go(-1);">
+                            &nbsp;
+                            <a href="{% url 'modificar_usuario_admin' user.id%}" class="btn btn-warning">Modificar usuario.</a>
+                            &nbsp;
+                            <a href="{% url 'listar_tareas' %}" class="btn btn-danger">Ver mis tareas.</a>
+                            &nbsp;
+                            <a href="{% url 'estadisticas_usuario' user.id%}" class="btn btn-success">Ver mis estadisticas.</a>
+                            &nbsp;
+                            <a href="{% url 'listar_reportes_problemas' %}" class="btn btn-primary">Ver mis reportes.</a>
+                            &nbsp;
+                            <a href="{% url 'listar_rechazos_tarea' %}" class="btn btn-primary">Ver mis solicitudes de rechazos.</a>
+                            
+                            
+                        </div>
+                        
+                
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+
+
+<!-- <script>
+    
+    var element = document.getElementById(imprimir_grupo_estadistica);
+    console.log(element);
+    html2pdf(element);
+
+</script> -->
+
+
+{% endblock %}

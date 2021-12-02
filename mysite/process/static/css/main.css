@@ -338,4 +338,11 @@ body {
   }
 
 
+  .datepicker-container{
+    z-index:9999 !important;
+  }
+
+  .inicio{
+      padding: 10%;
+  }
   

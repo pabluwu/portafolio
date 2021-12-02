@@ -26,7 +26,9 @@
                                 {% endif %}
                             </div>
                             <div class="file-modificar col-xl-4 col-md-6 ">
-                                <a href="{% url 'estadistica_departamento' departamento.id%}" class="btn btn-success">Ver Estadisticas</a>
+                                {% if perms.process.view_estadistica %}
+                                    <a href="{% url 'estadistica_departamento' departamento.id%}" class="btn btn-success">Ver Estadisticas</a>
+                                {% endif %}
                             </div>
                         </div>
 

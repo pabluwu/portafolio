@@ -40,7 +40,7 @@
                     <div class="col-xl-4 col-md-12 col-sm-12 justify-content-center">
                         {% if request.user.is_superuser %}
                         <form action="" class="filtroSemaforo" method="POST">
-                            <h4>Grupos</h2>
+                            <h4>Departamentos</h2>
                             {% csrf_token %}
                             <select class="btn btn-secondary" name="filtro_grupo" id="grupo_filtro">
                                 {% for g in departamento_combo %}

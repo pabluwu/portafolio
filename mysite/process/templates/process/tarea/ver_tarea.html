@@ -11,21 +11,64 @@
                 <div class="card-body">
                     
                     <h2>Revisar una tarea Completada.</h2>
+                    
+                
+                        <input type=button class="btn btn-info" value="Volver Atrás" onClick="javascript:history.go(-1);">
+                        
+                    
                     <hr>
                     <form action="" method="POST" enctype="multipart/form-data">
 
                         {% csrf_token %}
                         {{ form | crispy }}
-                        <div class="d-flex justify-content-center">
-                            {% if perms.process.change_tarea %}
-                            <input type="submit" value="Atras" class="btn btn-primary">
-                            {% endif %}
-                        </div>
 
                     </form>
                     {{mensaje}}
                 </div>
             </div>
+            {% if tareas_subordinadas %}
+            <div class="card">
+                <div class="card-body">
+                    
+                    <h2>Tareas subordinadas.</h2>
+                    <hr>
+                        <div class="table-responsive">
+                
+                            <table class="table table-striped table-hover table-responsive-sm">
+                                <tr>
+                                    <th>Id </th>
+                                    <th>Nombre </th>
+                                    <th>Realizado</th>
+                                    <th>Encargado</th>
+                                    <th></th>
+                                    
+                                </tr>
+                                {% for p in tareas_subordinadas %}
+                                    <tr>
+                                        <td>{{ p.id }}</td>
+                                        <td>{{ p.nombre | title }}</td>
+                                        <td>
+                                            {% if p.realizado %}
+                                            Si
+                                            {% endif %}
+                                
+                                        </td>
+                                        <td>
+                                            {{ p.usuario }}
+                                        </td>                        
+                                        {% if p.realizado %}
+                                        <td>
+                                            <a href="{% url 'tarea_completada' p.id%}" class="btn btn-primary">Abrir</a>
+                                            
+                                        </td>
+                                        {% endif %}
+                                    </tr>
+                                {% endfor %}
+                            </table>
+                        </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>

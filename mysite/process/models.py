@@ -22,6 +22,7 @@ class Tarea(models.Model):
     fechaLimite = models.DateField(default=datetime.now)
     fechaTermino = models.DateField(default=datetime.now)
     usuario = models.ForeignKey(User, null=True, on_delete=models.PROTECT)
+    tarea_parent = models.ForeignKey('self', null=True, default=None, on_delete=models.PROTECT)
 
     
     def __str__(self):

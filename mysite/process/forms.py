@@ -108,6 +108,17 @@ class TareaForm(forms.ModelForm):
             'fechaLimite':forms.DateInput(format="%m/%d/%Y"),
         }
 
+class TareaSubordinadaForm(forms.ModelForm):
+    
+    class Meta:
+        model = models.Tarea
+        fields = ['nombre', 'descripcion', 'fechaLimite', 'usuario']
+        
+        widgets = {
+            'fechaLimite':forms.DateInput(format="%m/%d/%Y",attrs={'id':'fechaLimite2'}),
+            
+        }
+
 class TareaModificarForm(forms.ModelForm):
     
     class Meta:

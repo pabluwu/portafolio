@@ -1,6 +1,4 @@
-{% extends 'process/base.html'%}
-{% load crispy_forms_tags %}
-{% block content %}
+
 
 <script src="https://code.highcharts.com/highcharts.js"></script>
 <script src="https://code.highcharts.com/modules/exporting.js"></script>
@@ -10,18 +8,13 @@
 <div class="container">
     <br>
                     <br>
-                    
     <div class="row">
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
                     <div class="row">
                         <input type=button class="btn btn-info col-xl-2" value="Volver Atrás" onClick="javascript:history.go(-1);">
-                        &nbsp;
-                        
-                        <a class="btn btn-success col-xl-2" href="{% url 'reporte_estadistica_usuario' usuario.id %}">Imprimir Reporte</a>
                         <hr>
-                        
                         <h2>Estadisticas usuario: {{usuario.username}} | {{ usuario.email }}.</h2>
                         <hr>
                         <div class="card col-xl-4">
@@ -138,98 +131,3 @@
     </div>
 </div>
 
-
-<script type="application/javascript">
-    Highcharts.chart('containerGrafico', {
-    chart: {
-        plotBackgroundColor: null,
-        plotBorderWidth: null,
-        plotShadow: false,
-        type: 'pie'
-    },
-    title: {
-        text: 'Gráfico de tareas realizadas/no realizadas.'
-    },
-    tooltip: {
-        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
-    },
-    accessibility: {
-        point: {
-            valueSuffix: '%'
-        }
-    },
-    plotOptions: {
-        pie: {
-            allowPointSelect: true,
-            cursor: 'pointer',
-            dataLabels: {
-                enabled: true,
-                format: '<b>{point.name}</b>: {point.percentage:.1f} %'
-            }
-        }
-    },
-    series: [{
-        name: 'Brands',
-        colorByPoint: true,
-        data: [{
-            name: 'Tareas Realizadas',
-            y: {{ porcentajes.0 }}
-        }, {
-            name: 'Tareas sin realizar',
-            y: {{ porcentajes.1 }}
-        }]
-    }]
-});
-</script>
-
-<script type="application/javascript">
-    Highcharts.setOptions({
-     colors: ['#c11111 ', ' #fcff41', '#4fe158']
-    });
-    Highcharts.chart('containerGrafico2', {
-    chart: {
-        plotBackgroundColor: null,
-        plotBorderWidth: null,
-        plotShadow: false,
-        type: 'pie'
-    },
-    title: {
-        text: 'Estado de tareas por realizar.'
-    },
-    tooltip: {
-        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
-    },
-    accessibility: {
-        point: {
-            valueSuffix: '%'
-        }
-    },
-    plotOptions: {
-        pie: {
-            allowPointSelect: true,
-            cursor: 'pointer',
-            dataLabels: {
-                enabled: true,
-                format: '<b>{point.name}</b>: {point.percentage:.1f} %'
-            }
-        }
-    },
-    series: [{
-        name: 'Brands',
-        colorByPoint: true,
-        data: [{
-            name: 'Tareas en rojo',
-            y: {{ porcentaje_estado_tareas.0 }}
-        }, {
-            name: 'Tareas en amarillo',
-            y: {{ porcentaje_estado_tareas.1 }}
-        },{
-            name: 'Tareas en verde',
-            y: {{ porcentaje_estado_tareas.2 }}
-        }]
-    }]
-});
-</script>
-
-
-{% endblock %}

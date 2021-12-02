@@ -39,6 +39,9 @@ urlpatterns=[
 
     path('reporte_estadistica_departamento/<id>',views.reporte_estadistica_departamento, name="reporte_estadistica_departamento"),
     path('reporte_estadistica_grupo/<id>',views.reporte_estadistica_grupo, name="reporte_estadistica_grupo"),
+    path('reporte_estadistica_usuario/<id>',views.reporte_estadistica_usuario, name="reporte_estadistica_usuario"),
+    path('reporte_estadistica_general',views.reporte_estadistica_general, name="reporte_estadistica_general"),
+    
     
 
     

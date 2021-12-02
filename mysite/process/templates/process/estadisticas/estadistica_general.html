@@ -22,6 +22,8 @@
                         &nbsp;
                         
                         
+                        <a class="btn btn-success col-xl-2" href="{% url 'reporte_estadistica_general'%}">Imprimir Reporte</a>
+                        
                         <hr>
                         <h2>Estadisticas Generales.</h2>
                         <hr>
@@ -33,9 +35,9 @@
                                 
                                 <h5>Tareas Sin Asignar: {{cant_tareas_sin_asignar}} </h5>
                                 <hr>
-                                <h5>Tareas No realizadas: {{cant_tareas_sin_realizar}} </h5>
+                                <h5>Tareas Asignadas No realizadas: {{cant_tareas_sin_realizar}} </h5>
                                 
-                                <h5>Tareas Realizadas: {{cant_tareas_realizadas}} </h5>
+                                <h5>Tareas Asignadas Realizadas: {{cant_tareas_realizadas}} </h5>
                             </div>
                         </div>
                         
