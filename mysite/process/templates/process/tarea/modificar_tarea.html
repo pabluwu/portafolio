@@ -105,27 +105,34 @@
                             {{ form | crispy }}
                             <input type="hidden" name="form_type" value="modificarform">
                             <div class="row justify-content-between">
+                                
+                                        
+                                <!-- <input type="submit" value="Rechazar Tarea" class="btn btn-primary" name="mybtn"> -->
+                                {% if rechazo == None and request.user == tarea.usuario %}
                                 <div class="file-modificar col-xl-6 col-md-6 ">
-                                        
-                                        <!-- <input type="submit" value="Rechazar Tarea" class="btn btn-primary" name="mybtn"> -->
-                                        {% if rechazo == None and request.user == tarea.usuario %}
-                                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                                            data-bs-target="#exampleModal">Rechazar Tarea</button>
-                                        
-                                        {% elif rechazo != None %}
-                                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                                            data-bs-target="#exampleModal">Motivo Rechazo</button>
-                                        
-                                        {% endif %}
-                                    
+                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                    data-bs-target="#exampleModal">Rechazar Tarea</button>
                                 </div>
+                                
+                                
+                                {% elif rechazo != None %}
+                                <div class="file-modificar col-xl-6 col-md-6 ">
+                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                    data-bs-target="#exampleModal">Motivo Rechazo</button>
+                                </div>
+                                
+                                
+                                {% endif %}
+                                    
+                                
+                                
                                 {% if request.user == tarea.usuario %}
                                 <div class="file-modificar col-xl-6 col-md-6 ">
                                     <input type="submit" value="Terminar tarea" class="btn btn-primary" name="terminar">
                                 
                                 </div>
                                 {% endif %}
-                                {% if tarea.tarea_parent == None and request.user == tarea.usuario %}
+                                {% if tarea.tarea_parent == None and request.user == tarea.usuario or perms.process.add_tarea %}
                                     <div class="file-modificar col-xl-6 col-md-6 ">
                                         
                                         <button type="button" class="btn btn-primary" data-bs-toggle="modal"

@@ -5,6 +5,23 @@
         <div class="card-body">
             <h2>Listado de tareas completadas.</h2>
             <hr>
+            <div class="row align-items-start">
+                <div class="col-xl-12 col-md-12 col-sm-12 justify-content-center">
+                    {% if request.user.is_superuser or perms.process.add_tarea or perms.process.change_tarea%}
+                    <form action="" class="filtroSemaforo" method="POST">
+                        <h4>Usuario</h2>
+                        {% csrf_token %}
+                        <select class="btn btn-secondary" name="filtro_usuario" id="usuario_filtro">
+                            {% for u in usuarios %}
+                            <option value="{{u.id}}">{{u.username}}</option>
+                            {% endfor %}
+                        </select>
+                        
+                        <input class="btn btn-primary" type="submit" name="filtroUsuario" value="Filtrar">
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
             <div class="table-responsive">
                 <table class="table table-striped table-hover table-responsive-sm">
                     <tr>

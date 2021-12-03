@@ -88,6 +88,18 @@ def actualizar_semaforo():
             semaforo.estadoSemaforo = 'r'
         semaforo.save()
 
+def listar_tareas_subordinadas(tareas):
+            tareas_subordinadas=[]
+            for t in tareas:
+                try:
+                    t_subordinadas = models.Tarea.objects.filter(realizado=False,is_tipo=False, tarea_parent=t)    
+                    if t_subordinadas:
+                        for x in t_subordinadas:
+
+                            tareas_subordinadas.append(x)
+                except:
+                    pass
+            return tareas_subordinadas
 
 @login_required()
 def listar_tareas(request):
@@ -95,11 +107,12 @@ def listar_tareas(request):
     usuarios = usuario.objects.all()
     departamento_combo = models.Departamento.objects.all()
     respuesta = models.RespuestaRechazo()
+    tareas_subordinadas = []
     rechazos = []
     calculos = []
     semaforos = []
     myFilter = None
-    tareas = models.Tarea.objects.filter(realizado=False, is_tipo=False)    
+    tareas = models.Tarea.objects.filter(realizado=False,is_tipo=False)
     for t in tareas:
         calculoEstado = models.CalculoEstado.objects.get(tarea=t)
         
@@ -119,17 +132,30 @@ def listar_tareas(request):
         
 
 
-    if request.user.is_superuser:
+    if request.user.is_superuser or request.user.has_perm('process.change_tarea'):
         user = "all"
-        tareas = models.Tarea.objects.filter(realizado=False,is_tipo=False)
-        myFilter = filters.TareaFilter(request.GET, queryset=tareas)
-        tareas = myFilter.qs
+        tareas = models.Tarea.objects.filter(realizado=False,is_tipo=False,tarea_parent=None)
+        
+        
+        for t in tareas:
+            try:
+                t_subordinadas = models.Tarea.objects.filter(realizado=False,is_tipo=False, tarea_parent=t)    
+                if t_subordinadas:
+                    for x in t_subordinadas:
+
+                        tareas_subordinadas.append(x)
+            except:
+                pass
+            
+        print(tareas_subordinadas)
+        
+        
         if request.POST.get('filtroSemaforo'):
             tareas = filtroSemaforo(request.POST['filtroEstadoSemaforo'],user)
         elif request.POST.get('filtroUsuario'):
             tareas = models.Tarea.objects.filter(realizado=False, usuario=request.POST['filtro_usuario'],is_tipo=False)
         elif request.POST.get('limpiarFiltro'):
-            tareas = models.Tarea.objects.filter(realizado=False,is_tipo=False)
+            tareas = models.Tarea.objects.filter(realizado=False,is_tipo=False,tarea_parent=None)
         elif request.POST.get('filtroGrupo'):
             departamento = get_object_or_404(models.Departamento, id=request.POST['filtro_grupo'])
             tareas_departamento = listar_tareas_departamento(departamento.id,0)
@@ -139,15 +165,16 @@ def listar_tareas(request):
                 tareas.append(tarea1) 
             # tareas = models.Tarea.objects.filter(realizado=False, usuario=usuario_flag)
         else:
-            tareas = models.Tarea.objects.filter(realizado=False,is_tipo=False)
+            tareas = models.Tarea.objects.filter(realizado=False,is_tipo=False,tarea_parent=None)
     else:
         user = request.user
-        tareas = models.Tarea.objects.filter(usuario = user, realizado = False, is_tipo=False)                                        
+        
+        print(tareas_subordinadas)
         #Bloque filtro por semáforo.
         if request.POST.get('filtroSemaforo'):
             tareas = filtroSemaforo(request.POST['filtroEstadoSemaforo'], user)
         else:
-            tareas = models.Tarea.objects.filter(usuario = user, realizado = False,is_tipo=False)                                        
+            tareas = models.Tarea.objects.filter(usuario = user, realizado = False, is_tipo=False)                                             
         
         
     data = {
@@ -157,7 +184,9 @@ def listar_tareas(request):
         'filtro':myFilter,
         'usuarios':usuarios,
         'departamento_combo':departamento_combo,
+        'tareas_subordinadas':tareas_subordinadas,
     }
+    
     return render(request, 'process/tarea/listar_tarea.html', data)
 
 @login_required()
@@ -288,14 +317,20 @@ def filtroSemaforo(estado, user):
 
 @login_required()
 def listar_tareas_completadas(request):
-    if request.user.is_superuser:
+    usuarios = models.User.objects.all()
+    if request.user.is_superuser or request.user.has_perm('process.change_tarea'):
         tareas = listar_tareas_bd(1,1,1)
+        if request.POST.get('filtroUsuario'):
+            usuario = request.POST['filtro_usuario']
+            tareas = listar_tareas_bd(1,0,usuario)
+            
     else:
         user = request.user
         tareas = listar_tareas_bd(1,0,user.id)
 
     data = {
-        'tareas':tareas
+        'tareas':tareas,
+        'usuarios':usuarios
     }
     return render(request, 'process/tarea/listar_tarea_completada.html', data)
 
@@ -366,21 +401,22 @@ def modificar_tarea(request, id):
         for o in otra_tarea:
             print(o.usuario)
             usuarios.append(o.usuario)
-            
         print(usuarios)
         print(user)
     except:
         pass
-
+        
+    try:
+        tarea_padre = models.Tarea.objects.get(id=tarea.tarea_parent.id)
+        usuarios.append(tarea_padre.usuario)
+    except:
+        pass
     
-        print("Mismo usuario")
-    else:
-        print("usuario distinto")
     rechazo = models.MotivoRechazo()
     respuestaRechazo = models.RespuestaRechazo()
     
     if tarea.realizado is False:
-        if tarea.usuario == user or user in usuarios:
+        if tarea.usuario == user or user in usuarios or user.is_superuser or user.has_perm('process.change_tarea'):
             
             data_form = forms.SolicitudRechazoForm()
             tareas_subordinadas = models.Tarea()
@@ -576,7 +612,7 @@ def listar_flujo_tareas(request):
 def modificar_flujo_tarea(request, id):
     if request.user.has_perm('process.change_flujotarea'):
         flujo_tarea = get_object_or_404(models.FlujoTarea, id=id)
-        print(flujo_tarea.tareas.all())
+        
 
         data={
             'form': forms.FlujoModificarForm(instance=flujo_tarea)
@@ -725,8 +761,8 @@ def modificar_usuario_admin(request, id):
                 # print(usuario.groups)
                 usuario.save()
                 print(usuario.groups)
-                data["mensaje"] = "Modificado correctamente."
-                data["form"] = formulario
+                messages.success(request, "Grupo modificado correctamente")
+                return redirect(to="modificar_usuario_admin",id=usuario.id)
 
         return render(request,'registration/modificar_usuario.html', data)
     else:
@@ -744,13 +780,75 @@ def agregar_grupo(request):
             formulario = forms.GroupForm(data=request.POST)
             nombre = formulario['nombre'].value()
             permisos = formulario['permisos'].value()
+            
             permiso = Permission.objects.all()
             grupo_nuevo, created = Group.objects.get_or_create(name=nombre)
             for i in permisos:
                 permiso = Permission.objects.get(codename=i)
+                
                 grupo_nuevo.permissions.add(permiso)
             grupo_nuevo.save()
+            messages.success(request, "Grupo modificado correctamente")
+            
         return render(request,'process/grupos_roles/agregar_grupo.html', data)
+    else:
+        return render(request,'process/error_permiso.html')
+
+@login_required
+def listar_grupo(request):
+    if request.user.is_superuser:
+        grupos = Group.objects.all()
+        data={
+            'grupos': grupos
+        }
+        
+        return render(request,'process/grupos_roles/listar_grupos.html', data)
+    else:
+        return render(request,'process/error_permiso.html')
+
+@login_required
+def modificar_grupo(request,id):
+    if request.user.is_superuser:
+        grupo = Group.objects.get(id=id)
+        permisos = []
+        for g in grupo.permissions.all():
+            permisos.append(g.codename)
+        
+        data_form = forms.GroupForm()
+        data_form = {
+        'nombre':grupo.name,
+        'permisos':permisos,
+        }
+        if request.method == 'POST':
+            formulario = forms.GroupForm(data=request.POST, files=request.FILES)
+            if formulario.is_valid():
+                if request.POST.get('eliminar'):
+                    grupo.delete()
+                    messages.success(request, "Grupo Eliminado")
+                    return redirect(to="listar_grupo")
+                elif request.POST.get('guardar'):
+                    nombre = formulario['nombre'].value()
+                    permisos = formulario['permisos'].value()                
+                    permiso = Permission.objects.all()
+                    grupo_modificar, created = Group.objects.get_or_create(name=grupo.name)
+                    grupo_modificar.name=nombre
+                    grupo_modificar.permissions.clear()
+                    for i in permisos:
+                        permiso = Permission.objects.get(codename=i)
+                        
+                        grupo_modificar.permissions.add(permiso)
+                    print(grupo_modificar.name)
+                    print(grupo_modificar.permissions.all())
+                    grupo_modificar.save()  
+                    messages.success(request, "Grupo modificado correctamente")
+                    return redirect(to="modificar_grupo",id=grupo.id)
+        
+
+        data = {
+            'grupo':grupo,
+            'form': forms.GroupForm(data_form)
+        }
+        return render(request,'process/grupos_roles/modificar_grupo.html', data)
     else:
         return render(request,'process/error_permiso.html')
 
@@ -1413,6 +1511,7 @@ def contar_tareas_total_usuario():
 def perfil_usuario(request):
     user = request.user
     departamento = ()
+    grupo = ()
     try:
         departamento = models.Departamento.objects.get(id=user.departamento.id)
     except:

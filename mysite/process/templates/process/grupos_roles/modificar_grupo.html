@@ -1,0 +1,38 @@
+{% extends 'process/base.html'%}
+{% load crispy_forms_tags %}
+{% block content %}
+
+<div class="container">
+    <br>
+                    <br>
+    <div class="row">
+        <div class="col-12 col-md-6 offset-md-3">
+            <div class="card">
+                <div class="card-body">
+                    
+                    <h2>Agregar un grupo.</h2>
+                    <hr>
+                    <a class="btn btn-primary" href="{% url 'listar_grupo' %}">Volver al Listado</a>
+                    <form action="" method="POST" enctype="multipart/form-data">
+
+                        {% csrf_token %}
+                        {{ form | crispy }}
+                        <div class="d-flex justify-content-center">
+                            <input type="reset" value="Cancelar" class="btn btn-secondary">
+                            &nbsp;
+                            <input type="submit" value="Guardar" class="btn btn-primary" name="guardar">
+                            &nbsp;
+                            <input type="submit" value="Eliminar" class="btn btn-primary" name="eliminar">
+                        </div>
+
+                    </form>
+                    {{mensaje}}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}
