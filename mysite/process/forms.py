@@ -21,9 +21,12 @@ class UserCreationForm(UserCreationForm):
             'last_name': _('Apellido'),
             'groups': _('Grupo'),
         }
-        widgets = {
-
+        requireds = {
+            'departamento':False,
+            'groups':False,
         }
+
+        
 
 class RechazoForm(forms.ModelForm):
     class Meta:

@@ -129,6 +129,7 @@ def listar_tareas(request):
             semaforo.estadoSemaforo = 'r'
         semaforo.save()
         semaforos.append(semaforo)
+        print(semaforo.estadoSemaforo)
         
 
 
@@ -193,7 +194,7 @@ def listar_tareas(request):
 def listar_rechazos_tarea(request):
     tareas_rechazadas = []
     t = []
-    if request.user.has_perm('process._add_respuestarechazo'):
+    if request.user.has_perm('process.add_respuestarechazo'):
         tareas_rechazadas = listar_tareas_rechazadas(0)
         if request.POST.get('solicitudes_no_respondidas'):
             tareas_rechazadas = listar_tareas_rechazadas(0)
@@ -236,7 +237,7 @@ def revisar_rechazo_tarea(request, id, id_rechazo):
         'nombre':tarea.nombre,
         'descripcion':tarea.descripcion,
         'fecha_limite':tarea.fechaLimite,
-        'usuario_rechazo':'pepito',
+        'usuario_rechazo':rechazo.usuario.username,
     }
         
     try:
